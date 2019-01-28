@@ -1,3 +1,5 @@
+// This code is mainly copied from the book with minor changes
+// check https://learnopengl.com to learn more!
 #pragma once
 #include <GL/glew.h>
 #include <glm/glm.hpp>
