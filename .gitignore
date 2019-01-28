@@ -1,0 +1,7 @@
+# ignore the compiled executable file
+run.exe
+# ignore some configure file of vscode
+.vscode/*
+!.vscode/tasks.json
+# ignore testing images
+Textures/*
