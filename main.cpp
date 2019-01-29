@@ -128,6 +128,7 @@ int main()
     GLint objectColorLoc = glGetUniformLocation(program.programID, "objectColor");
     GLint lightColorLoc = glGetUniformLocation(program.programID, "lightColor");
     GLint lightPosLoc = glGetUniformLocation(program.programID, "lightPos");
+    GLint viewPosLoc = glGetUniformLocation(program.programID, "viewPos");
     // set object view
     glm::mat4 projection(1.0f);
     glm::mat4 view(1.0f);
@@ -162,7 +163,8 @@ int main()
         glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
         glUniform3f(objectColorLoc, 1.0f, 0.5f, 0.31f);
         glUniform3f(lightColorLoc, 1.0f, 1.0f, 1.0f);
-        glUniform3fv(lightPosLoc, 1, glm::value_ptr(lightPos));
+        glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z);
+        glUniform3f(viewPosLoc, camera.Position.x, camera.Position.y, camera.Position.z);
 
         vao.bind();
         glDrawArrays(GL_TRIANGLES, 0, 36);
