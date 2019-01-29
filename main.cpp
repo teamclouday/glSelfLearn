@@ -16,6 +16,7 @@ void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
 void do_movement();
 
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 bool keys[1024];
 bool firstMouse = true;
 GLfloat deltaTime = 0.0f;
@@ -51,6 +52,13 @@ int main()
     if(!program.Exits())
     {
         printf("Failed to load program!\n");
+        glfwTerminate();
+        return -1;
+    }
+    Shader lambProgram = Shader("LambVertex.glsl", "LambFrag.glsl");
+    if(!lambProgram.Exits())
+    {
+        printf("Failed to load lamb program!\n");
         glfwTerminate();
         return -1;
     }
@@ -98,19 +106,6 @@ int main()
         -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
         -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
     };
-    // set positions for cubes
-    glm::vec3 cubePositions[] = {
-        glm::vec3( 0.0f,  0.0f,   0.0f),
-        glm::vec3( 2.0f,  5.0f, -15.0f),
-        glm::vec3(-1.5f, -2.2f,  -2.5f),
-        glm::vec3(-3.8f, -2.0f, -12.3f),
-        glm::vec3( 2.4f, -0.4f,  -3.5f),
-        glm::vec3(-1.7f,  3.0f,  -7.5f),
-        glm::vec3( 1.3f, -2.0f,  -2.5f),
-        glm::vec3( 1.5f,  2.0f,  -2.5f),
-        glm::vec3( 1.5f,  0.2f,  -1.5f),
-        glm::vec3(-1.3f,  1.0f,  -1.5f)
-    };
     // create vao & vbo
     VertexBuffer vbo;
     VertexArray vao;
@@ -119,29 +114,24 @@ int main()
     vbo.bind();
     vbo.feed(sizeof(vertices), vertices);
     vao.addPointer(3, 5 * sizeof(GLfloat), 0);
-    vao.addPointer(2, 5 * sizeof(GLfloat), (3 * sizeof(GLfloat)));
     vao.unbind();
     vbo.unbind();
-    // load textures
-    Texture texture1;
-    if(!texture1.load("brick.jpg"))
-    {
-        glfwTerminate();
-        return -1;
-    }
-    Texture texture2;
-    if(!texture2.load("abstract.jpg"))
-    {
-        glfwTerminate();
-        return -1;
-    }
+    // create lamb vao
+    VertexArray lambVAO;
+    lambVAO.bind();
+    vbo.bind();
+    lambVAO.addPointer(3, 5 * sizeof(GLfloat), 0);
+    lambVAO.unbind();
+    vbo.unbind();
     // set uniform location
-    GLint modelLoc = glGetUniformLocation(program.programID, "model");
-    GLint viewLoc = glGetUniformLocation(program.programID, "view");
-    GLint projectionLoc = glGetUniformLocation(program.programID, "projection");
+    GLint objectColorLoc = glGetUniformLocation(program.programID, "objectColor");
+    GLint lightColorLoc = glGetUniformLocation(program.programID, "lightColor");
     // set object view
     glm::mat4 projection(1.0f);
     glm::mat4 view(1.0f);
+    glm::mat4 model(1.0f);
+
+    GLint modelLoc, viewLoc, projectionLoc;
 
     while(!glfwWindowShouldClose(window))
     {
@@ -155,32 +145,42 @@ int main()
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        projection = glm::perspective(camera.Zoom, (float)WINDOW_WIDTH/(float)WINDOW_HEIGHT, 0.1f, 1000.0f);
+        projection = glm::perspective(camera.Zoom, (GLfloat)WINDOW_WIDTH/(GLfloat)WINDOW_HEIGHT, 0.1f, 100.0f);
         view = camera.GetViewMatrix();
 
         program.Use();
 
+        modelLoc = glGetUniformLocation(program.programID, "model");
+        viewLoc = glGetUniformLocation(program.programID, "view");
+        projectionLoc = glGetUniformLocation(program.programID, "projection");
+    
+        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+        glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
+        glUniform3f(objectColorLoc, 1.0f, 0.5f, 0.31f);
+        glUniform3f(lightColorLoc, 1.0f, 0.5f, 1.0f);
+
+        vao.bind();
+        model = glm::mat4(1.0f);
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        vao.unbind();
+
+        lambProgram.Use();
+
+        modelLoc = glGetUniformLocation(lambProgram.programID, "model");
+        viewLoc = glGetUniformLocation(lambProgram.programID, "view");
+        projectionLoc = glGetUniformLocation(lambProgram.programID, "projection");
+    
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
         glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
-        glActiveTexture(GL_TEXTURE0);
-        texture1.bind();
-        glUniform1i(glGetUniformLocation(program.programID, "outTexture1"), 0);
-        glActiveTexture(GL_TEXTURE1);
-        texture2.bind();
-        glUniform1i(glGetUniformLocation(program.programID, "outTexture2"), 1);
-
-        vao.bind();
-        for(GLuint i = 0; i < 10; i++)
-        {
-            glm::mat4 model(1.0f);
-            model = glm::translate(model, cubePositions[i]);
-            GLfloat angle = 20.0f * i;
-            model = glm::rotate(model, angle, glm::vec3(1.0, 0.3f, 0.5f));
-            glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-            glDrawArrays(GL_TRIANGLES, 0, 36);
-        }
-        vao.unbind();
+        lambVAO.bind();
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, lightPos);
+        model = glm::scale(model, glm::vec3(0.2f));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        lambVAO.unbind();
 
         glfwSwapBuffers(window);
     }
