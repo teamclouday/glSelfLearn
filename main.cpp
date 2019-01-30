@@ -129,6 +129,15 @@ int main()
     GLint lightColorLoc = glGetUniformLocation(program.programID, "lightColor");
     GLint lightPosLoc = glGetUniformLocation(program.programID, "lightPos");
     GLint viewPosLoc = glGetUniformLocation(program.programID, "viewPos");
+    // set material uniform location
+    GLint matAmbientLoc = glGetUniformLocation(program.programID, "material.ambient");
+    GLint matDiffuseLoc = glGetUniformLocation(program.programID, "material.diffuse");
+    GLint matSpecularLoc = glGetUniformLocation(program.programID, "material.specular");
+    GLint matShineLoc = glGetUniformLocation(program.programID, "material.shininess");
+    // set Light uniform location
+    GLint lightAmbientLoc = glGetUniformLocation(program.programID, "light.ambient");
+    GLint lightDiffuseLoc = glGetUniformLocation(program.programID, "light.diffuse");
+    GLint lightSpecularLoc = glGetUniformLocation(program.programID, "light.specular");
     // set object view
     glm::mat4 projection(1.0f);
     glm::mat4 view(1.0f);
@@ -136,11 +145,20 @@ int main()
 
     GLint modelLoc, viewLoc, projectionLoc;
 
+    glm::vec3 lightColor(1.0f);
+
     while(!glfwWindowShouldClose(window))
     {
         GLfloat currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
+
+        lightColor.x = sin(glfwGetTime() * 2.0f);
+        lightColor.y = sin(glfwGetTime() * 0.7f);
+        lightColor.z = sin(glfwGetTime() * 1.3f);
+
+        glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f);
+        glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f);
 
         glfwPollEvents();
         do_movement();
@@ -151,6 +169,7 @@ int main()
         projection = glm::perspective(camera.Zoom, (GLfloat)WINDOW_WIDTH/(GLfloat)WINDOW_HEIGHT, 0.1f, 100.0f);
         view = camera.GetViewMatrix();
 
+        // for the main obj
         program.Use();
 
         modelLoc = glGetUniformLocation(program.programID, "model");
@@ -165,11 +184,19 @@ int main()
         glUniform3f(lightColorLoc, 1.0f, 1.0f, 1.0f);
         glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z);
         glUniform3f(viewPosLoc, camera.Position.x, camera.Position.y, camera.Position.z);
+        glUniform3f(matAmbientLoc, 1.0f, 0.5f, 0.31f);
+        glUniform3f(matDiffuseLoc, 1.0f, 0.5f, 0.31f);
+        glUniform3f(matSpecularLoc, 0.5f, 0.5f, 0.5f);
+        glUniform1f(matShineLoc, 32.0f);
+        glUniform3f(lightAmbientLoc, ambientColor.x, ambientColor.y, ambientColor.z);
+        glUniform3f(lightDiffuseLoc, diffuseColor.x, diffuseColor.y, diffuseColor.z);
+        glUniform3f(lightSpecularLoc, 1.0f, 1.0f, 1.0f);
 
         vao.bind();
         glDrawArrays(GL_TRIANGLES, 0, 36);
         vao.unbind();
 
+        // for the lamb obj
         lambProgram.Use();
 
         modelLoc = glGetUniformLocation(lambProgram.programID, "model");
