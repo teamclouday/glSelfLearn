@@ -53,58 +53,71 @@ int main()
     {
         printf("Failed to load program!\n");
         glfwTerminate();
-        return -1;
+        return -2;
     }
     Shader lambProgram = Shader("LambVertex.glsl", "LambFrag.glsl");
     if(!lambProgram.Exits())
     {
         printf("Failed to load lamb program!\n");
         glfwTerminate();
-        return -1;
+        return -2;
+    }
+    Texture texContainer;
+    if(!texContainer.load("container.png"))
+    {
+        glfwTerminate();
+        return -3;
+    }
+    Texture texContainerSpec;
+    if(!texContainerSpec.load("containerSpec.png"))
+    {
+        glfwTerminate();
+        return -3;
     }
     // vertices data
     GLfloat vertices[] = {
-        -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-         0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
-         0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
-         0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
-        -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
-        -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
+               // positions          // normals           // texture coords
+        -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
+         0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 0.0f,
+         0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
+         0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
 
-        -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-         0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
+         0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f,
+         0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
 
-        -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
-        -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-        -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-        -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-        -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
-        -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+        -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
 
-         0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
-         0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-         0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-         0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-         0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
-         0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+         0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+         0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
 
-        -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
-         0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
-         0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-         0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 1.0f,
+         0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
+         0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
 
-        -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
-         0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
-         0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-         0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
+        -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f,
+         0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 1.0f,
+         0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
     };
     // create vao & vbo
     VertexBuffer vbo;
@@ -113,31 +126,25 @@ int main()
     vao.bind();
     vbo.bind();
     vbo.feed(sizeof(vertices), vertices);
-    vao.addPointer(3, 6 * sizeof(GLfloat), 0);
-    vao.addPointer(3, 6 * sizeof(GLfloat), 3*sizeof(GLfloat));
+    vao.addPointer(3, 8 * sizeof(GLfloat), 0);
+    vao.addPointer(3, 8 * sizeof(GLfloat), 3*sizeof(GLfloat));
+    vao.addPointer(2, 8 * sizeof(GLfloat), 6*sizeof(GLfloat));
     vao.unbind();
     vbo.unbind();
     // create lamb vao
     VertexArray lambVAO;
     lambVAO.bind();
     vbo.bind();
-    lambVAO.addPointer(3, 6 * sizeof(GLfloat), 0);
+    lambVAO.addPointer(3, 8 * sizeof(GLfloat), 0);
     lambVAO.unbind();
     vbo.unbind();
     // set uniform location
-    GLint objectColorLoc = glGetUniformLocation(program.programID, "objectColor");
-    GLint lightColorLoc = glGetUniformLocation(program.programID, "lightColor");
-    GLint lightPosLoc = glGetUniformLocation(program.programID, "lightPos");
     GLint viewPosLoc = glGetUniformLocation(program.programID, "viewPos");
-    // set material uniform location
-    GLint matAmbientLoc = glGetUniformLocation(program.programID, "material.ambient");
-    GLint matDiffuseLoc = glGetUniformLocation(program.programID, "material.diffuse");
-    GLint matSpecularLoc = glGetUniformLocation(program.programID, "material.specular");
     GLint matShineLoc = glGetUniformLocation(program.programID, "material.shininess");
-    // set Light uniform location
     GLint lightAmbientLoc = glGetUniformLocation(program.programID, "light.ambient");
     GLint lightDiffuseLoc = glGetUniformLocation(program.programID, "light.diffuse");
     GLint lightSpecularLoc = glGetUniformLocation(program.programID, "light.specular");
+    GLint lightPosLoc = glGetUniformLocation(program.programID, "light.position");
     // set object view
     glm::mat4 projection(1.0f);
     glm::mat4 view(1.0f);
@@ -153,13 +160,6 @@ int main()
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
-        lightColor.x = sin(glfwGetTime() * 2.0f);
-        lightColor.y = sin(glfwGetTime() * 0.7f);
-        lightColor.z = sin(glfwGetTime() * 1.3f);
-
-        glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f);
-        glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f);
-
         glfwPollEvents();
         do_movement();
 
@@ -172,6 +172,11 @@ int main()
         // for the main obj
         program.Use();
 
+        glActiveTexture(GL_TEXTURE0);
+        texContainer.bind();
+        glActiveTexture(GL_TEXTURE1);
+        texContainerSpec.bind();
+
         modelLoc = glGetUniformLocation(program.programID, "model");
         viewLoc = glGetUniformLocation(program.programID, "view");
         projectionLoc = glGetUniformLocation(program.programID, "projection");
@@ -180,16 +185,12 @@ int main()
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
         glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
-        glUniform3f(objectColorLoc, 1.0f, 0.5f, 0.31f);
-        glUniform3f(lightColorLoc, 1.0f, 1.0f, 1.0f);
         glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z);
         glUniform3f(viewPosLoc, camera.Position.x, camera.Position.y, camera.Position.z);
-        glUniform3f(matAmbientLoc, 1.0f, 0.5f, 0.31f);
-        glUniform3f(matDiffuseLoc, 1.0f, 0.5f, 0.31f);
-        glUniform3f(matSpecularLoc, 0.5f, 0.5f, 0.5f);
+        
         glUniform1f(matShineLoc, 32.0f);
-        glUniform3f(lightAmbientLoc, ambientColor.x, ambientColor.y, ambientColor.z);
-        glUniform3f(lightDiffuseLoc, diffuseColor.x, diffuseColor.y, diffuseColor.z);
+        glUniform3f(lightAmbientLoc, 0.2f, 0.2f, 0.2f);
+        glUniform3f(lightDiffuseLoc, 0.5f, 0.5f, 0.5f);
         glUniform3f(lightSpecularLoc, 1.0f, 1.0f, 1.0f);
 
         vao.bind();
