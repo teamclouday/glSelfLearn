@@ -119,6 +119,18 @@ int main()
         -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f,
         -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
     };
+    glm::vec3 cubePositions[] = {
+        glm::vec3( 0.0f,  0.0f,  0.0f),
+        glm::vec3( 2.0f,  5.0f, -15.0f),
+        glm::vec3(-1.5f, -2.2f, -2.5f),
+        glm::vec3(-3.8f, -2.0f, -12.3f),
+        glm::vec3( 2.4f, -0.4f, -3.5f),
+        glm::vec3(-1.7f,  3.0f, -7.5f),
+        glm::vec3( 1.3f, -2.0f, -2.5f),
+        glm::vec3( 1.5f,  2.0f, -2.5f),
+        glm::vec3( 1.5f,  0.2f, -1.5f),
+        glm::vec3(-1.3f,  1.0f, -1.5f)
+    };
     // create vao & vbo
     VertexBuffer vbo;
     VertexArray vao;
@@ -144,7 +156,8 @@ int main()
     GLint lightAmbientLoc = glGetUniformLocation(program.programID, "light.ambient");
     GLint lightDiffuseLoc = glGetUniformLocation(program.programID, "light.diffuse");
     GLint lightSpecularLoc = glGetUniformLocation(program.programID, "light.specular");
-    GLint lightPosLoc = glGetUniformLocation(program.programID, "light.position");
+    //GLint lightPosLoc = glGetUniformLocation(program.programID, "light.position");
+    GLint lightDirLoc = glGetUniformLocation(program.programID, "light.direction");
     // set object view
     glm::mat4 projection(1.0f);
     glm::mat4 view(1.0f);
@@ -181,11 +194,10 @@ int main()
         viewLoc = glGetUniformLocation(program.programID, "view");
         projectionLoc = glGetUniformLocation(program.programID, "projection");
     
-        model = glm::mat4(1.0f);
-        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
         glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
-        glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z);
+        //glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z);
+        glUniform3f(lightDirLoc, -0.2f, -1.0f, -0.3f);
         glUniform3f(viewPosLoc, camera.Position.x, camera.Position.y, camera.Position.z);
         
         glUniform1f(matShineLoc, 32.0f);
@@ -194,7 +206,15 @@ int main()
         glUniform3f(lightSpecularLoc, 1.0f, 1.0f, 1.0f);
 
         vao.bind();
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+        for(GLuint i = 0; i < 10; i++)
+        {
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, cubePositions[i]);
+            GLfloat angle = 20.0f * i;
+            model = glm::rotate(model, angle, glm::vec3(1.0f, 0.3f, 0.5f));
+            glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+        }
         vao.unbind();
 
         // for the lamb obj
