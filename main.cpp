@@ -156,8 +156,7 @@ int main()
     GLint lightAmbientLoc = glGetUniformLocation(program.programID, "light.ambient");
     GLint lightDiffuseLoc = glGetUniformLocation(program.programID, "light.diffuse");
     GLint lightSpecularLoc = glGetUniformLocation(program.programID, "light.specular");
-    //GLint lightPosLoc = glGetUniformLocation(program.programID, "light.position");
-    GLint lightDirLoc = glGetUniformLocation(program.programID, "light.direction");
+    GLint lightPosLoc = glGetUniformLocation(program.programID, "light.position");
     // set object view
     glm::mat4 projection(1.0f);
     glm::mat4 view(1.0f);
@@ -196,14 +195,17 @@ int main()
     
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
         glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
-        //glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z);
-        glUniform3f(lightDirLoc, -0.2f, -1.0f, -0.3f);
         glUniform3f(viewPosLoc, camera.Position.x, camera.Position.y, camera.Position.z);
         
         glUniform1f(matShineLoc, 32.0f);
+        glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z);
         glUniform3f(lightAmbientLoc, 0.2f, 0.2f, 0.2f);
         glUniform3f(lightDiffuseLoc, 0.5f, 0.5f, 0.5f);
         glUniform3f(lightSpecularLoc, 1.0f, 1.0f, 1.0f);
+        glUniform1f(glGetUniformLocation(program.programID, "light.constant"), 1.0f);
+        glUniform1f(glGetUniformLocation(program.programID, "light.linear"), 0.09f);
+        glUniform1f(glGetUniformLocation(program.programID, "light.quadratic"), 0.032f);
+
 
         vao.bind();
         for(GLuint i = 0; i < 10; i++)
