@@ -102,3 +102,21 @@ bool Shader::Exits()
 {
     return this->programID != 0;
 }
+
+void Shader::setf1(const std::string uniformName, float x)
+{
+    GLint loc = glGetUniformLocation(this->programID, uniformName.c_str());
+    glUniform1f(loc, x);
+}
+
+void Shader::setf3(const std::string uniformName, float x, float y, float z)
+{
+    GLint loc = glGetUniformLocation(this->programID, uniformName.c_str());
+    glUniform3f(loc, x, y, z);
+}
+
+void Shader::setMatrix4fv(const std::string uniformName, const GLfloat *value)
+{
+    GLint loc = glGetUniformLocation(this->programID, uniformName.c_str());
+    glUniformMatrix4fv(loc, 1, GL_FALSE, value);
+}

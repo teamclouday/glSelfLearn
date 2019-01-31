@@ -17,4 +17,8 @@ public:
     void Use();
     // check program exits
     bool Exits();
+    // set uniforms
+    void setf1(const std::string uniformName, float x);
+    void setf3(const std::string uniformName, float x, float y, float z);
+    void setMatrix4fv(const std::string uniformName, const GLfloat *value);
 };
