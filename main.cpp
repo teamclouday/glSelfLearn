@@ -150,21 +150,10 @@ int main()
     lambVAO.addPointer(3, 8 * sizeof(GLfloat), 0);
     lambVAO.unbind();
     vbo.unbind();
-    // set uniform location
-    GLint viewPosLoc = glGetUniformLocation(program.programID, "viewPos");
-    GLint matShineLoc = glGetUniformLocation(program.programID, "material.shininess");
-    GLint lightAmbientLoc = glGetUniformLocation(program.programID, "light.ambient");
-    GLint lightDiffuseLoc = glGetUniformLocation(program.programID, "light.diffuse");
-    GLint lightSpecularLoc = glGetUniformLocation(program.programID, "light.specular");
-    GLint lightPosLoc = glGetUniformLocation(program.programID, "light.position");
     // set object view
     glm::mat4 projection(1.0f);
     glm::mat4 view(1.0f);
     glm::mat4 model(1.0f);
-
-    GLint modelLoc, viewLoc, projectionLoc;
-
-    glm::vec3 lightColor(1.0f);
 
     while(!glfwWindowShouldClose(window))
     {
@@ -188,24 +177,21 @@ int main()
         texContainer.bind();
         glActiveTexture(GL_TEXTURE1);
         texContainerSpec.bind();
-
-        modelLoc = glGetUniformLocation(program.programID, "model");
-        viewLoc = glGetUniformLocation(program.programID, "view");
-        projectionLoc = glGetUniformLocation(program.programID, "projection");
     
-        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-        glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
-        glUniform3f(viewPosLoc, camera.Position.x, camera.Position.y, camera.Position.z);
-        
-        glUniform1f(matShineLoc, 32.0f);
-        glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z);
-        glUniform3f(lightAmbientLoc, 0.2f, 0.2f, 0.2f);
-        glUniform3f(lightDiffuseLoc, 0.5f, 0.5f, 0.5f);
-        glUniform3f(lightSpecularLoc, 1.0f, 1.0f, 1.0f);
-        glUniform1f(glGetUniformLocation(program.programID, "light.constant"), 1.0f);
-        glUniform1f(glGetUniformLocation(program.programID, "light.linear"), 0.09f);
-        glUniform1f(glGetUniformLocation(program.programID, "light.quadratic"), 0.032f);
-
+        program.setMatrix4fv("view", glm::value_ptr(view));
+        program.setMatrix4fv("projection", glm::value_ptr(projection));
+        program.setf3("viewPos", camera.Position.x, camera.Position.y, camera.Position.z);
+        program.setf1("material.shininess", 32.0f);
+        program.setf3("light.position", camera.Position.x, camera.Position.y, camera.Position.z);
+        program.setf3("light.direction", camera.Front.x, camera.Front.y, camera.Front.z);
+        program.setf3("light.ambient", 0.1f, 0.1f, 0.1f);
+        program.setf3("light.diffuse", 0.8f, 0.8f, 0.8f);
+        program.setf3("light.specular", 1.0f, 1.0f, 1.0f);
+        program.setf1("light.constant", 1.0f);
+        program.setf1("light.linear", 0.09f);
+        program.setf1("light.quadratic", 0.032f);
+        program.setf1("light.cutOff", glm::cos(glm::radians(12.5f)));
+        program.setf1("light.outerCutOff", glm::cos(glm::radians(17.5f)));
 
         vao.bind();
         for(GLuint i = 0; i < 10; i++)
@@ -214,24 +200,20 @@ int main()
             model = glm::translate(model, cubePositions[i]);
             GLfloat angle = 20.0f * i;
             model = glm::rotate(model, angle, glm::vec3(1.0f, 0.3f, 0.5f));
-            glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+            program.setMatrix4fv("model", glm::value_ptr(model));
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
         vao.unbind();
 
         // for the lamb obj
         lambProgram.Use();
-
-        modelLoc = glGetUniformLocation(lambProgram.programID, "model");
-        viewLoc = glGetUniformLocation(lambProgram.programID, "view");
-        projectionLoc = glGetUniformLocation(lambProgram.programID, "projection");
     
         model = glm::mat4(1.0f);
         model = glm::translate(model, lightPos);
         model = glm::scale(model, glm::vec3(0.2f));
-        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-        glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
+        lambProgram.setMatrix4fv("model", glm::value_ptr(model));
+        lambProgram.setMatrix4fv("view", glm::value_ptr(view));
+        lambProgram.setMatrix4fv("projection", glm::value_ptr(projection));
 
         lambVAO.bind();
         glDrawArrays(GL_TRIANGLES, 0, 36);
