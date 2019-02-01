@@ -25,6 +25,7 @@
                 "-lglfw3",
                 "-lgdi32",
                 "-lsoil",
+                "-lassimp",
                 "-lopengl32",
                 "-mconsole",
                 "&&",
@@ -57,6 +58,7 @@
                 "-lglfw3",
                 "-lgdi32",
                 "-lsoil",
+                "-lassimp",
                 "-lopengl32",
                 "-mconsole"
             ],

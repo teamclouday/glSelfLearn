@@ -10,7 +10,8 @@ For a backup of what I've learnt, which is exclusively built on Windows. May add
 2. [glew](http://glew.sourceforge.net/)  
 3. [glfw3](https://www.glfw.org/)  
 4. [soil](http://www.lonesock.net/soil.html) (for image processing)  
-5. [glm](https://glm.g-truc.net/0.9.9/index.html) (for mathematics)  
+5. [glm](https://glm.g-truc.net/index.html) (for mathematics)  
+6. [assimp](http://www.assimp.org/) (for model loading)  
 
 ------
 
