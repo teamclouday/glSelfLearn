@@ -4,4 +4,4 @@ run.exe
 .vscode/*
 !.vscode/tasks.json
 # ignore testing images
-Textures/*
+Images/*
