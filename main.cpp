@@ -1,10 +1,21 @@
 #define GLEW_STATIC
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-#include "./include/Shaders.hpp"
-#include "./include/VertexArray.hpp"
-#include "./include/Texture.hpp"
+
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+
+#include <SOIL/SOIL.h>
+
+#include "./include/Shader.hpp"
+#include "./include/Mesh.hpp"
 #include "./include/Camera.hpp"
+#include "./include/Model.hpp"
 
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 600
@@ -16,7 +27,6 @@ void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
 void do_movement();
 
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
-glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 bool keys[1024];
 bool firstMouse = true;
 GLfloat deltaTime = 0.0f;
@@ -47,119 +57,27 @@ int main()
     glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT); 
     // enable depth test
     glEnable(GL_DEPTH_TEST);
+
     // load program
-    Shader program = Shader("DemoVertex.glsl", "DemoFrag.glsl");
-    if(!program.Exits())
+    Shader program = Shader("ModelVert.glsl", "ModelFrag.glsl");
+    if(!program.exits())
     {
         printf("Failed to load program!\n");
         glfwTerminate();
         return -2;
     }
-    Shader lambProgram = Shader("LambVertex.glsl", "LambFrag.glsl");
-    if(!lambProgram.Exits())
+
+    Model programModel("./Models/nanosuit/nanosuit.obj");
+    if(!programModel.exists())
     {
-        printf("Failed to load lamb program!\n");
-        glfwTerminate();
-        return -2;
-    }
-    Texture texContainer;
-    if(!texContainer.load("container.png"))
-    {
+        printf("Failed to load the model!\n");
         glfwTerminate();
         return -3;
     }
-    Texture texContainerSpec;
-    if(!texContainerSpec.load("containerSpec.png"))
-    {
-        glfwTerminate();
-        return -3;
-    }
-    // vertices data
-    GLfloat vertices[] = {
-               // positions          // normals           // texture coords
-        -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
-         0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 0.0f,
-         0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
-         0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
-
-        -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
-         0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
-
-        -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-
-         0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-         0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-         0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-
-        -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 1.0f,
-         0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
-         0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 0.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
-
-        -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f,
-         0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
-    };
-    glm::vec3 cubePositions[] = {
-        glm::vec3( 0.0f,  0.0f,  0.0f),
-        glm::vec3( 2.0f,  5.0f, -15.0f),
-        glm::vec3(-1.5f, -2.2f, -2.5f),
-        glm::vec3(-3.8f, -2.0f, -12.3f),
-        glm::vec3( 2.4f, -0.4f, -3.5f),
-        glm::vec3(-1.7f,  3.0f, -7.5f),
-        glm::vec3( 1.3f, -2.0f, -2.5f),
-        glm::vec3( 1.5f,  2.0f, -2.5f),
-        glm::vec3( 1.5f,  0.2f, -1.5f),
-        glm::vec3(-1.3f,  1.0f, -1.5f)
-    };
-    glm::vec3 pointLightPositions[] = {
-        glm::vec3( 0.7f, 0.2f, 2.0f),
-        glm::vec3( 2.3f, -3.3f, -4.0f),
-        glm::vec3(-4.0f, 2.0f, -12.0f),
-        glm::vec3( 0.0f, 0.0f, -3.0f)
-    };
-    // create vao & vbo
-    VertexBuffer vbo;
-    VertexArray vao;
-    // bind VAO
-    vao.bind();
-    vbo.bind();
-    vbo.feed(sizeof(vertices), vertices);
-    vao.addPointer(3, 8 * sizeof(GLfloat), 0);
-    vao.addPointer(3, 8 * sizeof(GLfloat), 3*sizeof(GLfloat));
-    vao.addPointer(2, 8 * sizeof(GLfloat), 6*sizeof(GLfloat));
-    vao.unbind();
-    vbo.unbind();
-    // create lamb vao
-    VertexArray lambVAO;
-    lambVAO.bind();
-    vbo.bind();
-    lambVAO.addPointer(3, 8 * sizeof(GLfloat), 0);
-    lambVAO.unbind();
-    vbo.unbind();
+    
     // set object view
     glm::mat4 projection(1.0f);
     glm::mat4 view(1.0f);
-    glm::mat4 model(1.0f);
 
     while(!glfwWindowShouldClose(window))
     {
@@ -170,26 +88,47 @@ int main()
         glfwPollEvents();
         do_movement();
 
-        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+        glClearColor(0.0f, 0.01f, 0.05f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         projection = glm::perspective(camera.Zoom, (GLfloat)WINDOW_WIDTH/(GLfloat)WINDOW_HEIGHT, 0.1f, 100.0f);
         view = camera.GetViewMatrix();
 
-        // for the main obj
         program.Use();
-
-        glActiveTexture(GL_TEXTURE0);
-        texContainer.bind();
-        glActiveTexture(GL_TEXTURE1);
-        texContainerSpec.bind();
-    
-        program.setMatrix4fv("view", glm::value_ptr(view));
         program.setMatrix4fv("projection", glm::value_ptr(projection));
+        program.setMatrix4fv("view", glm::value_ptr(view));
         program.setf3("viewPos", camera.Position.x, camera.Position.y, camera.Position.z);
-        program.setf1("material.shininess", 32.0f);
 
-        // set uniform for spot light
+        // add dirLight
+        program.setf3("dirLight.direction", 0.2f, 0.3f, 0.4f);
+        program.setf3("dirLight.ambient", 0.1f, 0.1f, 0.1f);
+        program.setf3("dirLight.diffuse", 0.8f, 0.8f, 0.8f);
+        program.setf3("dirLight.specular", 1.0f, 1.0f, 1.0f);
+        // add pointLights
+        program.setf3("pointLights[0].position", -1.0f, 0.9f, -1.7f);
+        program.setf1("pointLights[0].constant", 1.0f);
+        program.setf1("pointLights[0].linear", 0.09);
+        program.setf1("pointLights[0].quadratic", 0.032);
+        program.setf3("pointLights[0].ambient", 0.1f, 0.1f, 0.1f);
+        program.setf3("pointLights[0].diffuse", 0.8f, 0.8f, 0.8f);
+        program.setf3("pointLights[0].specular", 1.0f, 1.0f, 1.0f);
+        
+        program.setf3("pointLights[1].position", -0.9f, 1.2f, 1.3f);
+        program.setf1("pointLights[1].constant", 1.0f);
+        program.setf1("pointLights[1].linear", 0.09);
+        program.setf1("pointLights[1].quadratic", 0.032);
+        program.setf3("pointLights[1].ambient", 0.1f, 0.1f, 0.1f);
+        program.setf3("pointLights[1].diffuse", 0.8f, 0.8f, 0.8f);
+        program.setf3("pointLights[1].specular", 1.0f, 1.0f, 1.0f);
+
+        program.setf3("pointLights[2].position", 1.8f, -0.9f, 0.4f);
+        program.setf1("pointLights[2].constant", 1.0f);
+        program.setf1("pointLights[2].linear", 0.09);
+        program.setf1("pointLights[2].quadratic", 0.032);
+        program.setf3("pointLights[2].ambient", 0.1f, 0.1f, 0.1f);
+        program.setf3("pointLights[2].diffuse", 0.8f, 0.8f, 0.8f);
+        program.setf3("pointLights[2].specular", 1.0f, 1.0f, 1.0f);
+        // add spotlight
         program.setf3("spotLight.position", camera.Position.x, camera.Position.y, camera.Position.z);
         program.setf3("spotLight.direction", camera.Front.x, camera.Front.y, camera.Front.z);
         program.setf1("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
@@ -201,73 +140,11 @@ int main()
         program.setf1("spotLight.linear", 0.09f);
         program.setf1("spotLight.quadratic", 0.032f);
 
-        // set uniform for directional light
-        program.setf3("dirLight.direction", -0.2f, -1.0f, -0.3f);
-        program.setf3("dirLight.ambient", 0.1f, 0.1f, 0.1f);
-        program.setf3("dirLight.diffuse", 0.8f, 0.8f, 0.8f);
-        program.setf3("dirLight.specular", 1.0f, 1.0f, 1.0f);
-
-        // set uniform for point lights
-        program.setf3("pointLights[0].position", pointLightPositions[0].x, pointLightPositions[0].y, pointLightPositions[0].z);
-        program.setf1("pointLights[0].constant", 1.0f);
-        program.setf1("pointLights[0].linear", 0.09f);
-        program.setf1("pointLights[0].quadratic", 0.032f);
-        program.setf3("pointLights[0].ambient", 0.1f, 0.1f, 0.1f);
-        program.setf3("pointLights[0].diffuse", 0.8f, 0.8f, 0.8f);
-        program.setf3("pointLights[0].specular", 1.0f, 1.0f, 1.0f);
-
-        program.setf3("pointLights[1].position", pointLightPositions[1].x, pointLightPositions[1].y, pointLightPositions[1].z);
-        program.setf1("pointLights[1].constant", 1.0f);
-        program.setf1("pointLights[1].linear", 0.09f);
-        program.setf1("pointLights[1].quadratic", 0.032f);
-        program.setf3("pointLights[1].ambient", 0.1f, 0.1f, 0.1f);
-        program.setf3("pointLights[1].diffuse", 0.8f, 0.8f, 0.8f);
-        program.setf3("pointLights[1].specular", 1.0f, 1.0f, 1.0f);
-
-        program.setf3("pointLights[2].position", pointLightPositions[2].x, pointLightPositions[2].y, pointLightPositions[2].z);
-        program.setf1("pointLights[2].constant", 1.0f);
-        program.setf1("pointLights[2].linear", 0.09f);
-        program.setf1("pointLights[2].quadratic", 0.032f);
-        program.setf3("pointLights[2].ambient", 0.1f, 0.1f, 0.1f);
-        program.setf3("pointLights[2].diffuse", 0.8f, 0.8f, 0.8f);
-        program.setf3("pointLights[2].specular", 1.0f, 1.0f, 1.0f);
-
-        program.setf3("pointLights[3].position", pointLightPositions[3].x, pointLightPositions[3].y, pointLightPositions[3].z);
-        program.setf1("pointLights[3].constant", 1.0f);
-        program.setf1("pointLights[3].linear", 0.09f);
-        program.setf1("pointLights[3].quadratic", 0.032f);
-        program.setf3("pointLights[3].ambient", 0.1f, 0.1f, 0.1f);
-        program.setf3("pointLights[3].diffuse", 0.8f, 0.8f, 0.8f);
-        program.setf3("pointLights[3].specular", 1.0f, 1.0f, 1.0f);
-
-        vao.bind();
-        for(GLuint i = 0; i < 10; i++)
-        {
-            model = glm::mat4(1.0f);
-            model = glm::translate(model, cubePositions[i]);
-            GLfloat angle = 20.0f * i;
-            model = glm::rotate(model, angle, glm::vec3(1.0f, 0.3f, 0.5f));
-            program.setMatrix4fv("model", glm::value_ptr(model));
-            glDrawArrays(GL_TRIANGLES, 0, 36);
-        }
-        vao.unbind();
-
-        // for the lamb obj
-        lambProgram.Use();
-
-        lambProgram.setMatrix4fv("view", glm::value_ptr(view));
-        lambProgram.setMatrix4fv("projection", glm::value_ptr(projection));
-
-        lambVAO.bind();
-        for(GLuint i = 0; i < 4; i++)
-        {
-            model = glm::mat4(1.0f);
-            model = glm::translate(model, pointLightPositions[i]);
-            model = glm::scale(model, glm::vec3(0.2f));
-            lambProgram.setMatrix4fv("model", glm::value_ptr(model));
-            glDrawArrays(GL_TRIANGLES, 0, 36);
-        }
-        lambVAO.unbind();
+        glm::mat4 model(1.0f);
+        model = glm::translate(model, glm::vec3(0.0f, -1.75f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
+        program.setMatrix4fv("model", glm::value_ptr(model));
+        programModel.draw(program);
 
         glfwSwapBuffers(window);
     }

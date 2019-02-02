@@ -16,7 +16,7 @@ public:
     // use program
     void Use();
     // check program exits
-    bool Exits();
+    bool exits();
     // set uniforms
     void setf1(const std::string uniformName, float x);
     void setf3(const std::string uniformName, float x, float y, float z);

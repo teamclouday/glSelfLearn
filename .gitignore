@@ -5,3 +5,5 @@ run.exe
 !.vscode/tasks.json
 # ignore testing images
 Images/*
+# ignore testing models
+Models/*

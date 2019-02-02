@@ -1,4 +1,4 @@
-#include "../include/Shaders.hpp"
+#include "../include/Shader.hpp"
 
 Shader::Shader(const std::string vertname, const std::string fragname)
 {
@@ -98,7 +98,7 @@ void Shader::Use()
     }
 }
 
-bool Shader::Exits()
+bool Shader::exits()
 {
     return this->programID != 0;
 }

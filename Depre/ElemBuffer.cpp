@@ -1,4 +1,4 @@
-#include "../include/ElemBuffer.hpp"
+#include "./ElemBuffer.hpp"
 
 ElemBuffer::ElemBuffer()
 {
