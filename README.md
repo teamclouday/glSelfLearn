@@ -21,4 +21,5 @@ All the codes are learnt from [learnopengl](https://learnopengl.com/), a great w
 ------
 
 **Current Status**  
-![current.png](./current.png)
+![current.png](./current.png)  
+Some models have different xyz coordinates and texture coordinates, so they won't work in current code (still an issue)
