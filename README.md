@@ -16,4 +16,9 @@ For a backup of what I've learnt, which is exclusively built on Windows. May add
 ------
 
 **Resources**  
-All the codes are learnt from [learnopengl](https://learnopengl.com/), a great website for learning OpenGL and useful techniques. I use GLEW instead of GLAD, so I learn it from the downloaded pdf version. Many thanks to the author!
+All the codes are learnt from [learnopengl](https://learnopengl.com/), a great website for learning OpenGL and useful techniques. I use GLEW instead of GLAD, so I learn it from the downloaded pdf version. Many thanks to the author!  
+
+------
+
+**Current Status**  
+![current.png](./current.png)
