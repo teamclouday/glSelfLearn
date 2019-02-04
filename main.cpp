@@ -60,15 +60,13 @@ int main()
     glDepthFunc(GL_LESS);
     // enable stencil test
     glEnable(GL_STENCIL_TEST);
+    glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+
 
     // load program
     Shader program = Shader("DemoVertex.glsl", "DemoFrag.glsl");
-    if(!program.exits())
-    {
-        printf("Failed to load program!\n");
-        glfwTerminate();
-        return -2;
-    }
+    Shader simple = Shader("DemoVertex.glsl", "SimpleFrag.glsl");
 
     // Set the object data (buffers, vertex attributes)
     GLfloat cubeVertices[] = {
@@ -154,8 +152,8 @@ int main()
     glBindVertexArray(0);
 
     // load textures
-    GLuint cubeTexture = loadTextureFromFile("water.jpg", "./Images");
-    GLuint planeTexture = loadTextureFromFile("brick.jpg", "./Images");
+    GLuint cubeTexture = loadTextureFromFile("brick.jpg", "./Images");
+    GLuint planeTexture = loadTextureFromFile("water.jpg", "./Images");
 
     // set object view
     glm::mat4 projection(1.0f);
@@ -173,15 +171,32 @@ int main()
         glClearColor(0.0f, 0.01f, 0.05f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-        program.Use();
+        // set uniforms
+        simple.Use();
         glm::mat4 model(1.0f);
-        projection = glm::perspective(camera.Zoom, (GLfloat)WINDOW_WIDTH/(GLfloat)WINDOW_HEIGHT, 0.1f, 100.0f);
         view = camera.GetViewMatrix();
+        projection = glm::perspective(camera.Zoom, (GLfloat)WINDOW_WIDTH/(GLfloat)WINDOW_HEIGHT, 0.1f, 100.0f);
+        glUniformMatrix4fv(glGetUniformLocation(simple.programID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+        glUniformMatrix4fv(glGetUniformLocation(simple.programID, "view"), 1, GL_FALSE, glm::value_ptr(view));
+        program.Use();
         glUniformMatrix4fv(glGetUniformLocation(program.programID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
         glUniformMatrix4fv(glGetUniformLocation(program.programID, "view"), 1, GL_FALSE, glm::value_ptr(view));
+        
+        // draw plane
+        glStencilMask(0x00);
+        glBindVertexArray(planeVAO);
+        glBindTexture(GL_TEXTURE_2D, planeTexture);
+        glUniformMatrix4fv(glGetUniformLocation(program.programID, "model"), 1, GL_FALSE, glm::value_ptr(model));
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glBindVertexArray(0);
+        
         // draw cubes
+        // 1st draw object as normal
+        glStencilFunc(GL_ALWAYS, 1, 0xFF);
+        glStencilMask(0xFF);
         glBindVertexArray(cubeVAO);
         glBindTexture(GL_TEXTURE_2D, cubeTexture);
+        model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(-1.0f, 0.005f, -1.0f));
         glUniformMatrix4fv(glGetUniformLocation(program.programID, "model"), 1, GL_FALSE, glm::value_ptr(model));
         glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -190,13 +205,29 @@ int main()
         glUniformMatrix4fv(glGetUniformLocation(program.programID, "model"), 1, GL_FALSE, glm::value_ptr(model));
         glDrawArrays(GL_TRIANGLES, 0, 36);
         glBindVertexArray(0);
-        // draw plane
-        glBindVertexArray(planeVAO);
-        glBindTexture(GL_TEXTURE_2D, planeTexture);
+
+        // draw scaled version of the objects
+        glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+        glStencilMask(0x00);
+        glDisable(GL_DEPTH_TEST);
+        simple.Use();
+        GLfloat scale = 1.1f;
+        // cubes
+        glBindVertexArray(cubeVAO);
+        glBindTexture(GL_TEXTURE_2D, cubeTexture);
         model = glm::mat4(1.0f);
-        glUniformMatrix4fv(glGetUniformLocation(program.programID, "model"), 1, GL_FALSE, glm::value_ptr(model));
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        model = glm::translate(model, glm::vec3(-1.0f, 0.005f, -1.0f));
+        model = glm::scale(model, glm::vec3(scale, scale, scale));
+        glUniformMatrix4fv(glGetUniformLocation(simple.programID, "model"), 1, GL_FALSE, glm::value_ptr(model));
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(2.0f, 0.005f, 0.0f));
+        model = glm::scale(model, glm::vec3(scale, scale, scale));
+        glUniformMatrix4fv(glGetUniformLocation(simple.programID, "model"), 1, GL_FALSE, glm::value_ptr(model));
+        glDrawArrays(GL_TRIANGLES, 0, 36);
         glBindVertexArray(0);
+        glStencilMask(0xFF);
+        glEnable(GL_DEPTH_TEST);
 
         glfwSwapBuffers(window);
     }
