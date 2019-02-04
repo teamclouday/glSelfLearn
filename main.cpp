@@ -62,7 +62,7 @@ int main()
     glEnable(GL_STENCIL_TEST);
 
     // load program
-    Shader program = Shader("ModelVert.glsl", "ModelFrag.glsl");
+    Shader program = Shader("DemoVertex.glsl", "DemoFrag.glsl");
     if(!program.exits())
     {
         printf("Failed to load program!\n");
@@ -70,14 +70,93 @@ int main()
         return -2;
     }
 
-    Model programModel("./Models/nanosuit/nanosuit.obj");
-    if(!programModel.exists())
-    {
-        printf("Failed to load the model!\n");
-        glfwTerminate();
-        return -3;
-    }
+    // Set the object data (buffers, vertex attributes)
+    GLfloat cubeVertices[] = {
+        // Positions          // Texture Coords
+        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+         0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+
+        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+         0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+    };
+
+     GLfloat planeVertices[] = {
+        // Positions            // Texture Coords
+        5.0f,  -0.5f,  5.0f,  2.0f, 0.0f,
+        -5.0f, -0.5f,  5.0f,  0.0f, 0.0f,
+        -5.0f, -0.5f, -5.0f,  0.0f, 2.0f,
+
+        5.0f,  -0.5f,  5.0f,  2.0f, 0.0f,
+        -5.0f, -0.5f, -5.0f,  0.0f, 2.0f,
+        5.0f,  -0.5f, -5.0f,  2.0f, 2.0f
+    };
     
+    // set cube VAO
+    GLuint cubeVAO, cubeVBO;
+    glGenVertexArrays(1, &cubeVAO);
+    glGenBuffers(1, &cubeVBO);
+    glBindVertexArray(cubeVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), &cubeVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+    glBindVertexArray(0);
+
+    // set plane VAO
+    GLuint planeVAO, planeVBO;
+    glGenVertexArrays(1, &planeVAO);
+    glGenBuffers(1, &planeVBO);
+    glBindVertexArray(planeVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), &planeVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+    glBindVertexArray(0);
+
+    // load textures
+    GLuint cubeTexture = loadTextureFromFile("water.jpg", "./Images");
+    GLuint planeTexture = loadTextureFromFile("brick.jpg", "./Images");
+
     // set object view
     glm::mat4 projection(1.0f);
     glm::mat4 view(1.0f);
@@ -94,60 +173,30 @@ int main()
         glClearColor(0.0f, 0.01f, 0.05f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
+        program.Use();
+        glm::mat4 model(1.0f);
         projection = glm::perspective(camera.Zoom, (GLfloat)WINDOW_WIDTH/(GLfloat)WINDOW_HEIGHT, 0.1f, 100.0f);
         view = camera.GetViewMatrix();
-
-        program.Use();
-        program.setMatrix4fv("projection", glm::value_ptr(projection));
-        program.setMatrix4fv("view", glm::value_ptr(view));
-        program.setf3("viewPos", camera.Position.x, camera.Position.y, camera.Position.z);
-
-        // add dirLight
-        program.setf3("dirLight.direction", 0.2f, 0.3f, 0.4f);
-        program.setf3("dirLight.ambient", 0.1f, 0.1f, 0.1f);
-        program.setf3("dirLight.diffuse", 0.8f, 0.8f, 0.8f);
-        program.setf3("dirLight.specular", 1.0f, 1.0f, 1.0f);
-        // add pointLights
-        program.setf3("pointLights[0].position", -1.0f, 0.9f, -1.7f);
-        program.setf1("pointLights[0].constant", 1.0f);
-        program.setf1("pointLights[0].linear", 0.09);
-        program.setf1("pointLights[0].quadratic", 0.032);
-        program.setf3("pointLights[0].ambient", 0.1f, 0.1f, 0.1f);
-        program.setf3("pointLights[0].diffuse", 0.8f, 0.8f, 0.8f);
-        program.setf3("pointLights[0].specular", 1.0f, 1.0f, 1.0f);
-        
-        program.setf3("pointLights[1].position", -0.9f, 1.2f, 1.3f);
-        program.setf1("pointLights[1].constant", 1.0f);
-        program.setf1("pointLights[1].linear", 0.09);
-        program.setf1("pointLights[1].quadratic", 0.032);
-        program.setf3("pointLights[1].ambient", 0.1f, 0.1f, 0.1f);
-        program.setf3("pointLights[1].diffuse", 0.8f, 0.8f, 0.8f);
-        program.setf3("pointLights[1].specular", 1.0f, 1.0f, 1.0f);
-
-        program.setf3("pointLights[2].position", 1.8f, -0.9f, 0.4f);
-        program.setf1("pointLights[2].constant", 1.0f);
-        program.setf1("pointLights[2].linear", 0.09);
-        program.setf1("pointLights[2].quadratic", 0.032);
-        program.setf3("pointLights[2].ambient", 0.1f, 0.1f, 0.1f);
-        program.setf3("pointLights[2].diffuse", 0.8f, 0.8f, 0.8f);
-        program.setf3("pointLights[2].specular", 1.0f, 1.0f, 1.0f);
-        // add spotlight
-        program.setf3("spotLight.position", camera.Position.x, camera.Position.y, camera.Position.z);
-        program.setf3("spotLight.direction", camera.Front.x, camera.Front.y, camera.Front.z);
-        program.setf1("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
-        program.setf1("spotLight.outerCutOff", glm::cos(glm::radians(17.5f)));
-        program.setf3("spotLight.ambient", 0.1f, 0.1f, 0.1f);
-        program.setf3("spotLight.diffuse", 0.8f, 0.8f, 0.8f);
-        program.setf3("spotLight.specular", 1.0f, 1.0f, 1.0f);
-        program.setf1("spotLight.constant", 1.0f);
-        program.setf1("spotLight.linear", 0.09f);
-        program.setf1("spotLight.quadratic", 0.032f);
-
-        glm::mat4 model(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, -1.75f, 0.0f));
-        model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
-        program.setMatrix4fv("model", glm::value_ptr(model));
-        programModel.draw(program);
+        glUniformMatrix4fv(glGetUniformLocation(program.programID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+        glUniformMatrix4fv(glGetUniformLocation(program.programID, "view"), 1, GL_FALSE, glm::value_ptr(view));
+        // draw cubes
+        glBindVertexArray(cubeVAO);
+        glBindTexture(GL_TEXTURE_2D, cubeTexture);
+        model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
+        glUniformMatrix4fv(glGetUniformLocation(program.programID, "model"), 1, GL_FALSE, glm::value_ptr(model));
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
+        glUniformMatrix4fv(glGetUniformLocation(program.programID, "model"), 1, GL_FALSE, glm::value_ptr(model));
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        glBindVertexArray(0);
+        // draw plane
+        glBindVertexArray(planeVAO);
+        glBindTexture(GL_TEXTURE_2D, planeTexture);
+        model = glm::mat4(1.0f);
+        glUniformMatrix4fv(glGetUniformLocation(program.programID, "model"), 1, GL_FALSE, glm::value_ptr(model));
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glBindVertexArray(0);
 
         glfwSwapBuffers(window);
     }
