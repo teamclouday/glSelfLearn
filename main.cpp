@@ -57,6 +57,9 @@ int main()
     glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT); 
     // enable depth test
     glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+    // enable stencil test
+    glEnable(GL_STENCIL_TEST);
 
     // load program
     Shader program = Shader("ModelVert.glsl", "ModelFrag.glsl");
@@ -89,7 +92,7 @@ int main()
         do_movement();
 
         glClearColor(0.0f, 0.01f, 0.05f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
         projection = glm::perspective(camera.Zoom, (GLfloat)WINDOW_WIDTH/(GLfloat)WINDOW_HEIGHT, 0.1f, 100.0f);
         view = camera.GetViewMatrix();

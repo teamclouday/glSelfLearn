@@ -9,6 +9,8 @@
 #include "./Shader.hpp"
 #include "./Mesh.hpp"
 
+GLuint loadTextureFromFile(const std::string filename, const std::string directory);
+
 class Model
 {
 public:
@@ -26,5 +28,4 @@ private:
     void processNode(aiNode* node, const aiScene* scene);
     Mesh processMesh(aiMesh* mesh, const aiScene* scene);
     std::vector<Texture> loadMaterialTextures(aiMaterial* mat, aiTextureType type, std::string typeName);
-    GLuint loadTextureFromFile(const std::string filename, const std::string directory);
 };

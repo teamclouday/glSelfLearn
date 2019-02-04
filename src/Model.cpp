@@ -117,7 +117,7 @@ std::vector<Texture> Model::loadMaterialTextures(aiMaterial* mat, aiTextureType 
         if(!skip)
         {
             Texture texture;
-            texture.id = this->loadTextureFromFile(str.C_Str(), this->directory);
+            texture.id = loadTextureFromFile(str.C_Str(), this->directory);
             texture.type = typeName;
             texture.path = str;
             textures.push_back(texture);
@@ -127,7 +127,7 @@ std::vector<Texture> Model::loadMaterialTextures(aiMaterial* mat, aiTextureType 
     return textures;
 }
 
-GLuint Model::loadTextureFromFile(const std::string filename, const std::string directory)
+GLuint loadTextureFromFile(const std::string filename, const std::string directory)
 {
     GLuint textureID;
     glGenTextures(1, &textureID);
