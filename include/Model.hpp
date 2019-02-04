@@ -9,7 +9,7 @@
 #include "./Shader.hpp"
 #include "./Mesh.hpp"
 
-GLuint loadTextureFromFile(const std::string filename, const std::string directory);
+GLuint loadTextureFromFile(const std::string filename, const std::string directory = "./Images", GLboolean alpha = false);
 
 class Model
 {

@@ -127,13 +127,13 @@ std::vector<Texture> Model::loadMaterialTextures(aiMaterial* mat, aiTextureType 
     return textures;
 }
 
-GLuint loadTextureFromFile(const std::string filename, const std::string directory)
+GLuint loadTextureFromFile(const std::string filename, const std::string directory, GLboolean alpha)
 {
     GLuint textureID;
     glGenTextures(1, &textureID);
 
     int width, height;
-    unsigned char *image = SOIL_load_image(((directory + '/' + filename).c_str()), &width, &height, 0, SOIL_LOAD_RGB);
+    unsigned char *image = SOIL_load_image(((directory + '/' + filename).c_str()), &width, &height, 0, alpha ? SOIL_LOAD_RGBA : SOIL_LOAD_RGB);
     if(!image)
     {
         printf("Cannot load texture: %s!\n", filename.c_str());
@@ -143,10 +143,10 @@ GLuint loadTextureFromFile(const std::string filename, const std::string directo
     // configure texture
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, alpha ? GL_CLAMP_TO_EDGE : GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, alpha ? GL_CLAMP_TO_EDGE : GL_REPEAT);
     // end of configure texture
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+    glTexImage2D(GL_TEXTURE_2D, 0, alpha ? GL_RGBA : GL_RGB, width, height, 0, alpha ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE, image);
     glGenerateMipmap(GL_TEXTURE_2D);
     SOIL_free_image_data(image);
     glBindTexture(GL_TEXTURE_2D, 0);
