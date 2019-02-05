@@ -252,6 +252,7 @@ int main()
 
         glfwSwapBuffers(window);
     }
+    
     glfwTerminate();
     return 0;
 }
