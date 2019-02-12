@@ -13,6 +13,8 @@ public:
     GLuint programID;
     // constructor
     Shader(const std::string vertName, const std::string fragName);
+    // constructor with geometric
+    Shader(const std::string vertName, const std::string fragName, const std::string geoName);
     // use program
     void Use();
     // check program exits

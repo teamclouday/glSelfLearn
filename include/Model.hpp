@@ -10,6 +10,7 @@
 #include "./Mesh.hpp"
 
 GLuint loadTextureFromFile(const std::string filename, const std::string directory = "./Images", GLboolean alpha = false);
+GLuint loadCubemap(std::vector<const char *> faces);
 
 class Model
 {
