@@ -88,11 +88,16 @@ int main()
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void*)(2*sizeof(GLfloat)));
     glBindVertexArray(0);
 
+    // load model
+    Model nanosuit = Model("./Models/nanosuit/nanosuit.obj");
 
     // set object view
     glm::mat4 projection(1.0f);
     glm::mat4 view(1.0f);
     glm::mat4 model(1.0f);
+    model = glm::translate(model, glm::vec3(0.0, -2.0f, 0.0f));
+    model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
+    projection = glm::perspective(45.0f, (GLfloat)WINDOW_WIDTH/(GLfloat)WINDOW_HEIGHT, 1.0f, 100.0f);
 
     while(!glfwWindowShouldClose(window))
     {
@@ -106,10 +111,14 @@ int main()
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+
+        view = camera.GetViewMatrix();
         program.Use();
-        glBindVertexArray(vao);
-        glDrawArrays(GL_POINTS, 0, 4);
-        glBindVertexArray(0);
+        glUniformMatrix4fv(glGetUniformLocation(program.programID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+        glUniformMatrix4fv(glGetUniformLocation(program.programID, "view"), 1, GL_FALSE, glm::value_ptr(view));
+        glUniformMatrix4fv(glGetUniformLocation(program.programID, "model"), 1, GL_FALSE, glm::value_ptr(model));
+        glUniform1f(glGetUniformLocation(program.programID, "time"), glfwGetTime());
+        nanosuit.draw(program);
 
         glfwSwapBuffers(window);
     }
