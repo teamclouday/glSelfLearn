@@ -62,10 +62,10 @@ int main()
     glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT); 
     // enable depth test
     glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS);
 
     // load program
     Shader program = Shader("DemoVertex.glsl", "DemoFrag.glsl", "DemoGeo.glsl");
+    Shader modelShader = Shader("ModelVert.glsl", "ModelFrag.glsl");
 
     // Set the object data (buffers, vertex attributes)
     GLfloat points[] = {
@@ -97,7 +97,7 @@ int main()
     glm::mat4 model(1.0f);
     model = glm::translate(model, glm::vec3(0.0, -2.0f, 0.0f));
     model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
-    projection = glm::perspective(45.0f, (GLfloat)WINDOW_WIDTH/(GLfloat)WINDOW_HEIGHT, 1.0f, 100.0f);
+    projection = glm::perspective(45.0f, (GLfloat)WINDOW_WIDTH/(GLfloat)WINDOW_HEIGHT, 0.1f, 100.0f);
 
     while(!glfwWindowShouldClose(window))
     {
@@ -108,16 +108,20 @@ int main()
         glfwPollEvents();
         do_movement();
 
-        glClearColor(0.9f, 0.9f, 0.9f, 1.0f);
+        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
         view = camera.GetViewMatrix();
+        modelShader.Use();
+        glUniformMatrix4fv(glGetUniformLocation(modelShader.programID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+        glUniformMatrix4fv(glGetUniformLocation(modelShader.programID, "view"), 1, GL_FALSE, glm::value_ptr(view));
+        glUniformMatrix4fv(glGetUniformLocation(modelShader.programID, "model"), 1, GL_FALSE, glm::value_ptr(model));
+        nanosuit.draw(modelShader);
         program.Use();
         glUniformMatrix4fv(glGetUniformLocation(program.programID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
         glUniformMatrix4fv(glGetUniformLocation(program.programID, "view"), 1, GL_FALSE, glm::value_ptr(view));
         glUniformMatrix4fv(glGetUniformLocation(program.programID, "model"), 1, GL_FALSE, glm::value_ptr(model));
-        glUniform1f(glGetUniformLocation(program.programID, "time"), glfwGetTime());
         nanosuit.draw(program);
 
         glfwSwapBuffers(window);
