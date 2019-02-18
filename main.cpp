@@ -33,7 +33,7 @@ void mouse_callback(GLFWwindow *window, double xpos, double ypos);
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
 void do_movement();
 
-Camera camera(glm::vec3(0.0f, 30.0f, 250.0f));
+Camera camera(glm::vec3(0.0f, 1.0f, 5.0f));
 bool keys[1024];
 bool firstMouse = true;
 GLfloat deltaTime = 0.0f;
@@ -49,6 +49,7 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
+    glfwWindowHint(GLFW_SAMPLES, 4); // MSAA with 4 samples
     // create window
     GLFWwindow *window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE, nullptr, nullptr);
     glfwMakeContextCurrent(window);
@@ -64,78 +65,74 @@ int main()
     glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT); 
     // enable depth test
     glEnable(GL_DEPTH_TEST);
+    // enable multi-sample
+    glEnable(GL_MULTISAMPLE);
 
     // load program
-    Shader program = Shader("ModelVert.glsl", "ModelFrag.glsl");
-    Shader instanceShader = Shader("DemoVertex.glsl", "DemoFrag.glsl");
-
-    // load models
-    Model planet = Model("./Models/planet/planet.obj");
-    Model rock = Model("./Models/rock/rock.obj");
+    Shader program = Shader("DemoVertex.glsl", "DemoFrag.glsl");
 
     // Set the object data (buffers, vertex attributes)
+    GLfloat cubeVertices[] = {
+        // Positions       
+        -0.5f, -0.5f, -0.5f, 
+         0.5f, -0.5f, -0.5f, 
+         0.5f,  0.5f, -0.5f, 
+         0.5f,  0.5f, -0.5f,  
+        -0.5f,  0.5f, -0.5f,  
+        -0.5f, -0.5f, -0.5f, 
 
+        -0.5f, -0.5f,  0.5f, 
+         0.5f, -0.5f,  0.5f, 
+         0.5f,  0.5f,  0.5f, 
+         0.5f,  0.5f,  0.5f,  
+        -0.5f,  0.5f,  0.5f, 
+        -0.5f, -0.5f,  0.5f, 
+
+        -0.5f,  0.5f,  0.5f, 
+        -0.5f,  0.5f, -0.5f,  
+        -0.5f, -0.5f, -0.5f,  
+        -0.5f, -0.5f, -0.5f, 
+        -0.5f, -0.5f,  0.5f, 
+        -0.5f,  0.5f,  0.5f, 
+
+         0.5f,  0.5f,  0.5f,  
+         0.5f,  0.5f, -0.5f, 
+         0.5f, -0.5f, -0.5f, 
+         0.5f, -0.5f, -0.5f, 
+         0.5f, -0.5f,  0.5f,  
+         0.5f,  0.5f,  0.5f,  
+
+        -0.5f, -0.5f, -0.5f, 
+         0.5f, -0.5f, -0.5f,  
+         0.5f, -0.5f,  0.5f, 
+         0.5f, -0.5f,  0.5f, 
+        -0.5f, -0.5f,  0.5f,  
+        -0.5f, -0.5f, -0.5f,  
+
+        -0.5f,  0.5f, -0.5f,  
+         0.5f,  0.5f, -0.5f,
+         0.5f,  0.5f,  0.5f,  
+         0.5f,  0.5f,  0.5f,  
+        -0.5f,  0.5f,  0.5f,  
+        -0.5f,  0.5f, -0.5f
+    };
+    
     // set VAO
+    GLuint VAO, VBO;
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+    glBindVertexArray(0);
 
     // set object view
     glm::mat4 projection(1.0f);
     glm::mat4 view(1.0f);
-    projection = glm::perspective(45.0f, (GLfloat)WINDOW_WIDTH/(GLfloat)WINDOW_HEIGHT, 0.1f, 1000.0f); 
-
-    // setup model properties
-    GLuint amount = 100000;
-    glm::mat4* modelMatrices;
-    modelMatrices = new glm::mat4[amount];
-    std::srand(glfwGetTime());
-    GLfloat radius = 150.0f;
-    GLfloat offset = 25.0f;
-    for(GLuint i = 0; i < amount; i++)
-    {
-        glm::mat4 model(1.0f);
-        GLfloat angle = (GLfloat)i / (GLfloat)amount * 360.0f;
-
-        GLfloat displacement = (std::rand() % (GLint)(2 * offset * 100)) / 100.0f - offset;
-        GLfloat x = std::sin(angle) * radius + displacement;
-
-        displacement = (std::rand() % (GLint)(2 * offset * 100)) / 100.0f - offset;
-        GLfloat y = displacement * 0.4f;
-
-        displacement = (std::rand() % (GLint)(2 * offset * 100)) / 100.0f - offset;
-        GLfloat z = std::cos(angle) * radius + displacement;
-
-        model = glm::translate(model, glm::vec3(x, y, z));
-        GLfloat scale = (std::rand() % 20) / 100.0f + 0.05f;
-        model = glm::scale(model, glm::vec3(scale));
-        GLfloat rotAngle = (std::rand() % 360);
-        model = glm::rotate(model, rotAngle, glm::vec3(0.4f, 0.6f, 0.8f));
-        modelMatrices[i] = model;
-    }
-
-    for(GLuint i = 0; i < rock.meshes.size(); i++)
-    {
-        GLuint VAO = rock.meshes[i].VAO;
-        GLuint VBO;
-        glGenBuffers(1, &VBO);
-        glBindVertexArray(VAO);
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferData(GL_ARRAY_BUFFER, amount * sizeof(glm::mat4), &modelMatrices[0], GL_STATIC_DRAW);
-        
-        glEnableVertexAttribArray(3);
-        glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(glm::vec4), (GLvoid*)0);
-        glEnableVertexAttribArray(4);
-        glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(glm::vec4), (GLvoid*)(sizeof(glm::vec4)));
-        glEnableVertexAttribArray(5);
-        glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(glm::vec4), (GLvoid*)(2*sizeof(glm::vec4)));
-        glEnableVertexAttribArray(6);
-        glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(glm::vec4), (GLvoid*)(3*sizeof(glm::vec4)));
-
-        glVertexAttribDivisor(3, 1);
-        glVertexAttribDivisor(4, 1);
-        glVertexAttribDivisor(5, 1);
-        glVertexAttribDivisor(6, 1);
-
-        glBindVertexArray(0);
-    }
+    glm::mat4 model(1.0f);
+    projection = glm::perspective(45.0f, (GLfloat)WINDOW_WIDTH/(GLfloat)WINDOW_HEIGHT, 0.1f, 100.0f);
 
     while(!glfwWindowShouldClose(window))
     {
@@ -151,32 +148,18 @@ int main()
 
         view = camera.GetViewMatrix();
 
-        // draw planet
         program.Use();
         glUniformMatrix4fv(glGetUniformLocation(program.programID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
         glUniformMatrix4fv(glGetUniformLocation(program.programID, "view"), 1, GL_FALSE, glm::value_ptr(view));
-        glm::mat4 model(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, -3.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(4.0f));
         glUniformMatrix4fv(glGetUniformLocation(program.programID, "model"), 1, GL_FALSE, glm::value_ptr(model));
-        planet.draw(program);
-
-        // draw meteorites
-        instanceShader.Use();
-        glUniformMatrix4fv(glGetUniformLocation(instanceShader.programID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-        glUniformMatrix4fv(glGetUniformLocation(instanceShader.programID, "view"), 1, GL_FALSE, glm::value_ptr(view));
-        for(GLuint i = 0; i < rock.meshes.size(); i++)
-        {
-            glBindVertexArray(rock.meshes[i].VAO);
-            glDrawElementsInstanced(GL_TRIANGLES, rock.meshes[i].vertices.size(), GL_UNSIGNED_INT, 0, amount);
-            glBindVertexArray(0);
-        }
-
+        glBindVertexArray(VAO);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        glBindVertexArray(0);
+        
         
         glfwSwapBuffers(window);
     }
 
-    delete modelMatrices;
     glfwTerminate();
     return 0;
 }
