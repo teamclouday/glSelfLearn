@@ -3,6 +3,7 @@
 #include <GLFW/glfw3.h>
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string>
 #include <vector>
 #include <map>
@@ -32,7 +33,7 @@ void mouse_callback(GLFWwindow *window, double xpos, double ypos);
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
 void do_movement();
 
-Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+Camera camera(glm::vec3(0.0f, 10.0f, 80.0f));
 bool keys[1024];
 bool firstMouse = true;
 GLfloat deltaTime = 0.0f;
@@ -65,65 +66,49 @@ int main()
     glEnable(GL_DEPTH_TEST);
 
     // load program
-    Shader program = Shader("DemoVertex.glsl", "DemoFrag.glsl");
+    Shader program = Shader("ModelVert.glsl", "ModelFrag.glsl");
+
+    // load models
+    Model planet = Model("./Models/planet/planet.obj");
+    Model rock = Model("./Models/rock/rock.obj");
 
     // Set the object data (buffers, vertex attributes)
-    GLfloat quadVertices[] = {
-        // Positions    // Colors
-        -0.05f,  0.05f, 1.0f, 0.0f, 0.0f,
-         0.05f, -0.05f, 0.0f, 1.0f, 0.0f,
-        -0.05f, -0.05f, 0.0f, 0.0f, 1.0f,
-        -0.05f,  0.05f, 1.0f, 0.0f, 0.0f,
-         0.05f, -0.05f, 0.0f, 1.0f, 0.0f,
-         0.05f,  0.05f, 0.0f, 1.0f, 1.0f
-    };
 
     // set VAO
-    GLuint VAO, VBO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)0);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)(2*sizeof(GLfloat)));
-    glBindVertexArray(0);
 
     // set object view
     glm::mat4 projection(1.0f);
     glm::mat4 view(1.0f);
-    glm::mat4 model(1.0f);
-    model = glm::translate(model, glm::vec3(0.0, -2.0f, 0.0f));
-    model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
-    projection = glm::perspective(45.0f, (GLfloat)WINDOW_WIDTH/(GLfloat)WINDOW_HEIGHT, 0.1f, 100.0f);
+    projection = glm::perspective(45.0f, (GLfloat)WINDOW_WIDTH/(GLfloat)WINDOW_HEIGHT, 0.1f, 1000.0f); 
 
-    // setup translations
-    glm::vec2 translations[100];
-    int index = 0;
-    GLfloat offset = 0.1f;
-    for(GLint y = -10; y < 10; y += 2)
+    // setup model properties
+    GLuint amount = 1000;
+    glm::mat4* modelMatrices;
+    modelMatrices = new glm::mat4[amount];
+    std::srand(glfwGetTime());
+    GLfloat radius = 50.0f;
+    GLfloat offset = 2.5f;
+    for(GLuint i = 0; i < amount; i++)
     {
-        for(GLint x = -10; x < 10; x += 2)
-        {
-            glm::vec2 translation(1.0f);
-            translation.x = (GLfloat)x / 10.0f + offset;
-            translation.y = (GLfloat)y / 10.0f + offset;
-            translations[index++] = translation;
-        }
-    }
+        glm::mat4 model(1.0f);
+        GLfloat angle = (GLfloat)i / (GLfloat)amount * 360.0f;
 
-    GLuint instanceVBO;
-    glGenBuffers(1, &instanceVBO);
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2)*100, &translations[0], GL_STATIC_DRAW);
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), (GLvoid*)0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glVertexAttribDivisor(2, 1);
-    glBindVertexArray(0);
+        GLfloat displacement = (std::rand() % (GLint)(2 * offset * 100)) / 100.0f - offset;
+        GLfloat x = std::sin(angle) * radius + displacement;
+
+        displacement = (std::rand() % (GLint)(2 * offset * 100)) / 100.0f - offset;
+        GLfloat y = displacement * 0.4f;
+
+        displacement = (std::rand() % (GLint)(2 * offset * 100)) / 100.0f - offset;
+        GLfloat z = std::cos(angle) * radius + displacement;
+
+        model = glm::translate(model, glm::vec3(x, y, z));
+        GLfloat scale = (std::rand() % 20) / 100.0f + 0.05f;
+        model = glm::scale(model, glm::vec3(scale));
+        GLfloat rotAngle = (std::rand() % 360);
+        model = glm::rotate(model, rotAngle, glm::vec3(0.4f, 0.6f, 0.8f));
+        modelMatrices[i] = model;
+    }
 
     while(!glfwWindowShouldClose(window))
     {
@@ -137,13 +122,27 @@ int main()
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        view = camera.GetViewMatrix();
+
         program.Use();
-        glBindVertexArray(VAO);
-        glDrawArraysInstanced(GL_TRIANGLES, 0, 6, 100);
-        glBindVertexArray(0);
+        glUniformMatrix4fv(glGetUniformLocation(program.programID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+        glUniformMatrix4fv(glGetUniformLocation(program.programID, "view"), 1, GL_FALSE, glm::value_ptr(view));
+        glm::mat4 model(1.0f);
+        model = glm::translate(model, glm::vec3(0.0f, -3.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(5.0f));
+        glUniformMatrix4fv(glGetUniformLocation(program.programID, "model"), 1, GL_FALSE, glm::value_ptr(model));
+        planet.draw(program);
+        for(GLuint i = 0; i < amount; i++)
+        {
+            glUniformMatrix4fv(glGetUniformLocation(program.programID, "model"), 1, GL_FALSE, glm::value_ptr(modelMatrices[i]));
+            rock.draw(program);
+        }
+
         
         glfwSwapBuffers(window);
     }
+
+    delete modelMatrices;
     glfwTerminate();
     return 0;
 }
