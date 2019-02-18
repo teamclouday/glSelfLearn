@@ -1,13 +1,15 @@
 #version 330 core
-layout (location = 0) in vec2 position;
-layout (location = 1) in vec3 color;
-layout (location = 2) in vec2 offset;
+layout (location = 0) in vec3 position;
+layout (location = 2) in vec2 texCoords;
+layout (location = 3) in mat4 instanceMatrix;
 
-out vec3 fColor;
+out vec2 TexCoords;
+
+uniform mat4 projection;
+uniform mat4 view;
 
 void main()
 {
-    vec2 pos = position * (gl_InstanceID / 100.0);
-    gl_Position = vec4(pos + offset, 0.0, 1.0);
-    fColor = color;
+    gl_Position = projection * view * instanceMatrix * vec4(position, 1.0);
+    TexCoords = texCoords;
 }

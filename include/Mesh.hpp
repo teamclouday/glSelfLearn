@@ -35,9 +35,9 @@ public:
     // Functions
     Mesh(std::vector<Vertex> vertices, std::vector<GLuint> indices, std::vector<Texture> textures);
     void draw(Shader shader);
-private:
     // Render Data
     GLuint VAO, VBO, EBO;
+private:
     // Functions
     void setupMesh();
 };
