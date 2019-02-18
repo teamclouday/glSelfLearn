@@ -33,7 +33,7 @@ void mouse_callback(GLFWwindow *window, double xpos, double ypos);
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
 void do_movement();
 
-Camera camera(glm::vec3(0.0f, 20.0f, 80.0f));
+Camera camera(glm::vec3(0.0f, 30.0f, 250.0f));
 bool keys[1024];
 bool firstMouse = true;
 GLfloat deltaTime = 0.0f;
@@ -87,8 +87,8 @@ int main()
     glm::mat4* modelMatrices;
     modelMatrices = new glm::mat4[amount];
     std::srand(glfwGetTime());
-    GLfloat radius = 60.0f;
-    GLfloat offset = 10.0f;
+    GLfloat radius = 150.0f;
+    GLfloat offset = 25.0f;
     for(GLuint i = 0; i < amount; i++)
     {
         glm::mat4 model(1.0f);
