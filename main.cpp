@@ -114,6 +114,17 @@ int main()
         }
     }
 
+    GLuint instanceVBO;
+    glGenBuffers(1, &instanceVBO);
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2)*100, &translations[0], GL_STATIC_DRAW);
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), (GLvoid*)0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glVertexAttribDivisor(2, 1);
+    glBindVertexArray(0);
+
     while(!glfwWindowShouldClose(window))
     {
         GLfloat currentFrame = glfwGetTime();
@@ -127,15 +138,6 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         program.Use();
-        for(GLint i = 0; i < 100; i++)
-        {
-            std::stringstream ss;
-            std::string index;
-            ss << i;
-            index = ss.str();
-            GLint location = glGetUniformLocation(program.programID, ("offsets[" + index + "]").c_str());
-            glUniform2f(location, translations[i].x, translations[i].y);
-        }
         glBindVertexArray(VAO);
         glDrawArraysInstanced(GL_TRIANGLES, 0, 6, 100);
         glBindVertexArray(0);
