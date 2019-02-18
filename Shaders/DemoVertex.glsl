@@ -1,19 +1,14 @@
 #version 330 core
-layout (location = 0) in vec3 position;
-layout (location = 1) in vec3 normal;
+layout (location = 0) in vec2 position;
+layout (location = 1) in vec3 color;
 
-out VS_OUT
-{
-    vec3 normal;
-} vs_out;
+out vec3 fColor;
 
-uniform mat4 projection;
-uniform mat4 view;
-uniform mat4 model;
+uniform vec2 offsets[100];
 
 void main()
 {
-    gl_Position = projection * view * model * vec4(position, 1.0f);
-    mat3 normalMatrix = mat3(transpose(inverse(view * model)));
-    vs_out.normal = normalize(vec3(projection * vec4(normalMatrix * normal, 1.0)));
+    vec2 offset = offsets[gl_InstanceID];
+    gl_Position = vec4(position + offset, 0.0, 1.0);
+    fColor = color;
 }

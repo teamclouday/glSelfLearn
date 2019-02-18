@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <sstream>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -64,32 +65,31 @@ int main()
     glEnable(GL_DEPTH_TEST);
 
     // load program
-    Shader program = Shader("DemoVertex.glsl", "DemoFrag.glsl", "DemoGeo.glsl");
-    Shader modelShader = Shader("ModelVert.glsl", "ModelFrag.glsl");
+    Shader program = Shader("DemoVertex.glsl", "DemoFrag.glsl");
 
     // Set the object data (buffers, vertex attributes)
-    GLfloat points[] = {
-        -0.5f, 0.5f, 1.0f, 0.0f, 0.0f, // Top-left
-         0.5f, 0.5f, 0.0f, 1.0f, 0.0f, // Top-right
-         0.5f, -0.5f, 0.0f, 0.0f, 1.0f, // Bottom-right
-        -0.5f, -0.5f, 1.0f, 1.0f, 0.0f // Bottom-left
+    GLfloat quadVertices[] = {
+        // Positions    // Colors
+        -0.05f,  0.05f, 1.0f, 0.0f, 0.0f,
+         0.05f, -0.05f, 0.0f, 1.0f, 0.0f,
+        -0.05f, -0.05f, 0.0f, 0.0f, 1.0f,
+        -0.05f,  0.05f, 1.0f, 0.0f, 0.0f,
+         0.05f, -0.05f, 0.0f, 1.0f, 0.0f,
+         0.05f,  0.05f, 0.0f, 1.0f, 1.0f
     };
 
     // set VAO
-    GLuint vao, vbo;
-    glCreateVertexArrays(1, &vao);
-    glCreateBuffers(1, &vbo);
-    glBindVertexArray(vao);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(points), points, GL_STATIC_DRAW);
+    GLuint VAO, VBO;
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void*)0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)0);
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void*)(2*sizeof(GLfloat)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)(2*sizeof(GLfloat)));
     glBindVertexArray(0);
-
-    // load model
-    Model nanosuit = Model("./Models/nanosuit/nanosuit.obj");
 
     // set object view
     glm::mat4 projection(1.0f);
@@ -98,6 +98,21 @@ int main()
     model = glm::translate(model, glm::vec3(0.0, -2.0f, 0.0f));
     model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
     projection = glm::perspective(45.0f, (GLfloat)WINDOW_WIDTH/(GLfloat)WINDOW_HEIGHT, 0.1f, 100.0f);
+
+    // setup translations
+    glm::vec2 translations[100];
+    int index = 0;
+    GLfloat offset = 0.1f;
+    for(GLint y = -10; y < 10; y += 2)
+    {
+        for(GLint x = -10; x < 10; x += 2)
+        {
+            glm::vec2 translation(1.0f);
+            translation.x = (GLfloat)x / 10.0f + offset;
+            translation.y = (GLfloat)y / 10.0f + offset;
+            translations[index++] = translation;
+        }
+    }
 
     while(!glfwWindowShouldClose(window))
     {
@@ -111,19 +126,20 @@ int main()
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-
-        view = camera.GetViewMatrix();
-        modelShader.Use();
-        glUniformMatrix4fv(glGetUniformLocation(modelShader.programID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-        glUniformMatrix4fv(glGetUniformLocation(modelShader.programID, "view"), 1, GL_FALSE, glm::value_ptr(view));
-        glUniformMatrix4fv(glGetUniformLocation(modelShader.programID, "model"), 1, GL_FALSE, glm::value_ptr(model));
-        nanosuit.draw(modelShader);
         program.Use();
-        glUniformMatrix4fv(glGetUniformLocation(program.programID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-        glUniformMatrix4fv(glGetUniformLocation(program.programID, "view"), 1, GL_FALSE, glm::value_ptr(view));
-        glUniformMatrix4fv(glGetUniformLocation(program.programID, "model"), 1, GL_FALSE, glm::value_ptr(model));
-        nanosuit.draw(program);
-
+        for(GLint i = 0; i < 100; i++)
+        {
+            std::stringstream ss;
+            std::string index;
+            ss << i;
+            index = ss.str();
+            GLint location = glGetUniformLocation(program.programID, ("offsets[" + index + "]").c_str());
+            glUniform2f(location, translations[i].x, translations[i].y);
+        }
+        glBindVertexArray(VAO);
+        glDrawArraysInstanced(GL_TRIANGLES, 0, 6, 100);
+        glBindVertexArray(0);
+        
         glfwSwapBuffers(window);
     }
     glfwTerminate();
