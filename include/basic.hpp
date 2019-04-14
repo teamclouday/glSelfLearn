@@ -4,7 +4,10 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <math.h>
 #include <string>
+
+#include "shader.hpp"
 
 #define WINDOW_WIDTH  800
 #define WINDOW_HEIGHT 600
