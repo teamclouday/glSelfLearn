@@ -1,0 +1,6 @@
+*.exe
+*.dll
+.vscode/
+build/
+external/*
+!external/external.zip
