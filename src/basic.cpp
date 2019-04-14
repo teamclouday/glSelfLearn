@@ -33,6 +33,15 @@ void initAll()
     glEnable(GL_DEPTH_TEST);
 }
 
+void timer(Uint32 *now, Uint32 *prev)
+{
+    *now = SDL_GetTicks();
+    Uint32 delta = *now - *prev;
+    if(delta < SPF)
+        SDL_Delay((Uint32)SPF - delta);
+    *prev = SDL_GetTicks();
+}
+
 bool pollEvents()
 {
     SDL_Event e;
@@ -51,6 +60,7 @@ bool pollEvents()
             }
         }
     }
+    return false;
 }
 
 void destroyAll()
