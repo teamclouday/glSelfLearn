@@ -2,6 +2,7 @@
 
 extern SDL_Window *myWindow;
 extern SDL_GLContext myContext;
+extern Shader *myShader;
 
 void initAll()
 {
@@ -31,6 +32,7 @@ void initAll()
         exit(2);
     }
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
 }
 
 void timer(Uint32 *now, Uint32 *prev)
@@ -65,6 +67,8 @@ bool pollEvents()
 
 void destroyAll()
 {
+    if(!myShader)
+        delete myShader;
     SDL_GL_DeleteContext(myContext);
     SDL_DestroyWindow(myWindow);
     SDL_Quit();
