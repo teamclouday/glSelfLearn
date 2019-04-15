@@ -10,24 +10,20 @@ void renderAll()
     glClearColor(0.0f, 0.8f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    float ct = (float)SDL_GetTicks() / 1000.0f;
-    GLfloat attrib[] = {
-        (float)sin(ct) * 0.5f,
-        (float)cos(ct) * 0.6f,
+    float tc = (float)SDL_GetTicks() / 1000.0f;
+    GLfloat offset[] = {
+        sin(tc)*0.5f,
+        cos(tc)*0.5f,
         0.0f, 0.0f
     };
 
-    GLfloat color[] = {
-        (float)sin(ct)*0.5f+0.5f,
-        (float)cos(ct)*0.5f+0.5f,
-        0.0f, 1.0f
-    };
-
     myShader->use();
+    
     glBindVertexArray(VAO);
-    glVertexAttrib4fv(0, attrib);
-    glVertexAttrib4fv(1, color);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    glPatchParameteri(GL_PATCH_VERTICES, 3);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glVertexAttrib4fv(0, offset);
+    glDrawArrays(GL_PATCHES, 0, 3);
     glBindVertexArray(0);
 
     SDL_GL_SwapWindow(myWindow);
@@ -37,7 +33,10 @@ int main(int argc, char *argv[])
 {
     initAll();
 
-    myShader = new Shader("./shaders/simple.vert", "./shaders/simple.frag");
+    myShader = new Shader("./shaders/simple.vert",
+                          "./shaders/simple.tesc",
+                          "./shaders/simple.tese",
+                          "./shaders/simple.frag");
     glCreateVertexArrays(1, &VAO);
 
     Uint32 tNow = SDL_GetTicks();
