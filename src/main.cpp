@@ -17,9 +17,16 @@ void renderAll()
         0.0f, 0.0f
     };
 
+    GLfloat color[] = {
+        (float)sin(ct)*0.5f+0.5f,
+        (float)cos(ct)*0.5f+0.5f,
+        0.0f, 1.0f
+    };
+
     myShader->use();
     glBindVertexArray(VAO);
     glVertexAttrib4fv(0, attrib);
+    glVertexAttrib4fv(1, color);
     glDrawArrays(GL_TRIANGLES, 0, 3);
     glBindVertexArray(0);
 
