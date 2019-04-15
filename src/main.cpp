@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
 {
     initAll();
 
-    myShader = new Shader("./shaders/simple/simple.vs", "./shaders/simple/simple.fs");
+    myShader = new Shader("./shaders/simple.vert", "./shaders/simple.frag");
     glCreateVertexArrays(1, &VAO);
 
     Uint32 tNow = SDL_GetTicks();
