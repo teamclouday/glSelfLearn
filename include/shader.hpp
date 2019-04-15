@@ -11,5 +11,7 @@ class Shader
 {
 public:
     Shader(std::string vpath, std::string fpath);
+    ~Shader();
+    void use();
     GLuint programID;
 };

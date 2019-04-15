@@ -22,7 +22,7 @@ void initAll()
                                 SDL_WINDOWPOS_CENTERED,
                                 WINDOW_WIDTH,
                                 WINDOW_HEIGHT,
-                                SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE);
+                                SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI);
     myContext = SDL_GL_CreateContext(myWindow);
     SDL_GL_SetSwapInterval(1);
     if(glewInit() != GLEW_OK)

@@ -80,3 +80,13 @@ Shader::Shader(std::string vpath, std::string fpath)
     glDeleteShader(vertShader);
     glDeleteShader(fragShader);
 }
+
+Shader::~Shader()
+{
+    glDeleteProgram(this->programID);
+}
+
+void Shader::use()
+{
+    glUseProgram(this->programID);
+}
