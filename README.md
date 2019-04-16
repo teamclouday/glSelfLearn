@@ -5,5 +5,5 @@ And I'll post some code here
 
 ------ 
 
-Useful website on [OpenGL extensions](www.khronos.org/registry/)  
-OpenGL API [Documentation](docs.gl/)
+OpenGL [Extensions](https://www.khronos.org/registry/)  
+OpenGL API [Lookup](https://docs.gl/)
