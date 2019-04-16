@@ -70,6 +70,7 @@ void Shader::compile()
     {
         glDeleteShader(this->shaderFiles[i]);
     }
+    this->shaderFiles.clear();
 }
 
 void Shader::use()
