@@ -26,6 +26,7 @@ include_directories(
     "${CMAKE_SOURCE_DIR}/include/"
     "${CMAKE_SOURCE_DIR}/external/glew/include"
     "${CMAKE_SOURCE_DIR}/external/SDL2/include"
+    "${CMAKE_SOURCE_DIR}/external/glm/include"
 )
 
 link_directories(

@@ -31,6 +31,7 @@ void initAll()
         printf("Failed to init GLEW\n");
         exit(2);
     }
+    glewExperimental = GL_TRUE;
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
 }
