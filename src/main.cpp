@@ -34,11 +34,10 @@ int main(int argc, char *argv[])
 {
     initAll();
 
-    myShader = new Shader("./shaders/simple.vert",
-                          //"./shaders/simple.tesc",
-                          //"./shaders/simple.tese",
-                          //"./shaders/simple.geom",
-                          "./shaders/simple.frag");
+    myShader = new Shader();
+    myShader->add("./shaders/simple.vert", GL_VERTEX_SHADER);
+    myShader->add("./shaders/simple.frag", GL_FRAGMENT_SHADER);
+    myShader->compile();
     glCreateVertexArrays(1, &VAO);
 
     Uint32 tNow = SDL_GetTicks();

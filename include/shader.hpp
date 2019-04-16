@@ -6,14 +6,17 @@
 #include <sstream>
 #include <fstream>
 #include <vector>
+#include <map>
 
 class Shader
 {
 public:
-    Shader(std::string vpath, std::string fpath);
-    Shader(std::string vpath, std::string tcpath, std::string tepath, std::string fpath);
-    Shader(std::string vpath, std::string tcpath, std::string tepath, std::string geopath, std::string fpath);
+    Shader();
     ~Shader();
+    void add(std::string path, GLenum shaderType);
+    void compile();
     void use();
     GLuint programID;
+private:
+    std::vector<GLuint> shaderFiles;
 };
