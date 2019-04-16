@@ -6,4 +6,4 @@ And I'll post some code here
 ------ 
 
 OpenGL [Extensions](https://www.khronos.org/registry/)  
-OpenGL API [Lookup](https://docs.gl/)
+OpenGL API [Lookup](http://docs.gl/)
