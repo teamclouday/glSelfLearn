@@ -9,7 +9,7 @@ void initAll()
     if(SDL_Init(SDL_INIT_VIDEO) < 0)
     {
         printf("Failed to init SDL2\nSDL Error: %s\n", SDL_GetError());
-        exit(1);
+        exit(ERROR_SDL_INIT);
     }
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
@@ -29,11 +29,13 @@ void initAll()
     if(glewInit() != GLEW_OK)
     {
         printf("Failed to init GLEW\n");
-        exit(2);
+        exit(ERROR_GLEW_INIT);
     }
     glewExperimental = GL_TRUE;
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
+    // glEnable(GL_DEBUG_OUTPUT);
+    // glDebugMessageCallback(MessageCallback, 0);
 }
 
 void timer(Uint32 *now, Uint32 *prev)

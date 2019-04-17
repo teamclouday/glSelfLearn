@@ -8,6 +8,8 @@
 #include <vector>
 #include <map>
 
+#include "myerror.hpp"
+
 class Shader
 {
 public:

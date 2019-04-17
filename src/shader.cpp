@@ -18,7 +18,7 @@ void Shader::add(std::string path, GLenum shaderType)
     if(!ifs.is_open())
     {
         printf("Cannot find shader file: %s\n", path.c_str());
-        exit(3);
+        exit(ERROR_SHADER_FILE_NOT_FOUND);
     }
     std::stringstream sstr;
     sstr << ifs.rdbuf();
@@ -39,7 +39,7 @@ void Shader::add(std::string path, GLenum shaderType)
         std::vector<GLchar> infoLog(infoLen+1);
         glGetShaderInfoLog(shader, infoLen, NULL, &infoLog[0]);
         printf("Shader %s failed to compile!\nInfo Log: %s\n", path.c_str(), &infoLog[0]);
-        exit(4);
+        exit(ERROR_SHADER_COMPILE);
     }
 
     this->shaderFiles.push_back(shader);
@@ -63,7 +63,7 @@ void Shader::compile()
         std::vector<GLchar> infoLog(infoLen+1);
         glGetProgramInfoLog(this->programID, infoLen, NULL, &infoLog[0]);
         printf("Failed to link shaders!\nInfo Log: %s\n", &infoLog[0]);
-        exit(5);
+        exit(ERROR_SHADER_PROGRAM_LINK);
     }
 
     for(unsigned i = 0; i < this->shaderFiles.size(); i++)
