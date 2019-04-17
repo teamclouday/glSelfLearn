@@ -4,6 +4,7 @@ SDL_Window *myWindow = nullptr;
 SDL_GLContext myContext = NULL;
 Shader *myShader = nullptr;
 GLuint VAO;
+GLuint buffer;
 
 void renderAll()
 {
@@ -38,7 +39,20 @@ int main(int argc, char *argv[])
     myShader->add("./shaders/simple.vert", GL_VERTEX_SHADER);
     myShader->add("./shaders/simple.frag", GL_FRAGMENT_SHADER);
     myShader->compile();
+
     glCreateVertexArrays(1, &VAO);
+
+    glCreateBuffers(1, &buffer);
+    glNamedBufferStorage(buffer, 1024*1024, NULL, GL_MAP_WRITE_BIT);
+    glBindBuffer(GL_ARRAY_BUFFER, buffer);
+
+    static const GLfloat data[] = {
+         0.25, -0.25, 0.5, 1.0,
+        -0.25, -0.25, 0.5, 1.0,
+         0.25,  0.25, 0.5, 1.0
+    };
+
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(data), data);
 
     Uint32 tNow = SDL_GetTicks();
     Uint32 tPrev = SDL_GetTicks();
