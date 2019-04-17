@@ -52,7 +52,11 @@ int main(int argc, char *argv[])
          0.25,  0.25, 0.5, 1.0
     };
 
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(data), data);
+    // glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(data), data);
+    void *ptr = glMapNamedBuffer(buffer, GL_WRITE_ONLY);
+    memcpy(ptr, data, sizeof(data));
+    glUnmapNamedBuffer(GL_ARRAY_BUFFER);
+
 
     Uint32 tNow = SDL_GetTicks();
     Uint32 tPrev = SDL_GetTicks();
