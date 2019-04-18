@@ -68,6 +68,13 @@ int main(int argc, char *argv[])
     GLuint uniformIndices[4];
     glGetUniformIndices(myShader->programID, 4, uniformNames, uniformIndices);
 
+    GLint uniformOffsets[4];
+    GLint arrayStrides[4];
+    GLint matrixStrides[4];
+    glGetActiveUniformsiv(myShader->programID, 4,uniformIndices, GL_UNIFORM_OFFSET, uniformOffsets);
+    glGetActiveUniformsiv(myShader->programID, 4,uniformIndices, GL_UNIFORM_ARRAY_STRIDE, arrayStrides);
+    glGetActiveUniformsiv(myShader->programID, 4,uniformIndices, GL_UNIFORM_MATRIX_STRIDE, matrixStrides);
+
     Uint32 tNow = SDL_GetTicks();
     Uint32 tPrev = SDL_GetTicks();
     bool quit = false;
