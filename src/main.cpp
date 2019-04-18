@@ -4,7 +4,7 @@ SDL_Window *myWindow = nullptr;
 SDL_GLContext myContext = NULL;
 Shader *myShader = nullptr;
 GLuint VAO;
-GLuint buffer;
+GLuint buffer[2];
 
 void renderAll()
 {
@@ -31,29 +31,33 @@ int main(int argc, char *argv[])
     myShader->add("./shaders/simple.frag", GL_FRAGMENT_SHADER);
     myShader->compile();
 
-    glCreateVertexArrays(1, &VAO);
-    glBindVertexArray(VAO);
-
-    glCreateBuffers(1, &buffer);
-    glNamedBufferStorage(buffer, 1024*1024, NULL, GL_MAP_WRITE_BIT | GL_DYNAMIC_STORAGE_BIT);
-    glBindBuffer(GL_ARRAY_BUFFER, buffer);
-
-    static const GLfloat data[] = {
+    static const GLfloat positions[] = {
          0.25, -0.25, 0.5, 1.0,
          0.25,  0.25, 0.5, 1.0,
         -0.25, -0.25, 0.5, 1.0,
     };
 
-    // glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(data), data);
-    void *ptr = glMapNamedBuffer(buffer, GL_WRITE_ONLY);
-    memcpy(ptr, data, sizeof(data));
-    glUnmapNamedBuffer(buffer);
+    static const GLfloat colors[] = {
+        0.5, 0.8, 1.0, 1.0,
+        0.3, 0.2, 0.6, 1.0,
+        0.7, 0.7, 0.2, 1.0,
+    };
 
-    glVertexArrayVertexBuffer(VAO, 0, buffer, 0, sizeof(GLfloat)*4);
+    glCreateVertexArrays(1, &VAO);
+
+    glCreateBuffers(2, &buffer[0]);
+
+    glNamedBufferStorage(buffer[0], sizeof(positions), positions, 0);
+    glVertexArrayVertexBuffer(VAO, 0, buffer[0], 0, sizeof(GLfloat)*4);
     glVertexArrayAttribFormat(VAO, 0, 4, GL_FLOAT, GL_FALSE, 0);
+    glVertexArrayAttribBinding(VAO, 0, 0);
     glEnableVertexArrayAttrib(VAO, 0);
 
-    glBindVertexArray(0);
+    glNamedBufferStorage(buffer[1], sizeof(colors), colors, 0);
+    glVertexArrayVertexBuffer(VAO, 1, buffer[1], 0, sizeof(GLfloat)*4);
+    glVertexArrayAttribFormat(VAO, 1, 4, GL_FLOAT, GL_FALSE, 0);
+    glVertexArrayAttribBinding(VAO, 1, 1);
+    glEnableVertexArrayAttrib(VAO, 1);
 
     Uint32 tNow = SDL_GetTicks();
     Uint32 tPrev = SDL_GetTicks();
