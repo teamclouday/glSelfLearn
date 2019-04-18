@@ -12,13 +12,6 @@ layout(std140) uniform TransformBlock
     mat4 projection_matrix;
 } transform;
 
-layout(std140, align = 16) uniform ManuallyLaidOutBlock
-{
-    layout (offset = 32) vec4 foo;
-    layout (offset = 8) vec2 bar;
-    layout (offset = 48) vec3 baz;
-} myBlock;
-
 void main()
 {
     gl_Position = position;

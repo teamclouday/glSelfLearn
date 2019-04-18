@@ -59,6 +59,15 @@ int main(int argc, char *argv[])
     glVertexArrayAttribBinding(VAO, 1, 1);
     glEnableVertexArrayAttrib(VAO, 1);
 
+    static const GLchar *uniformNames[4] = {
+        "TransformBlock.scale",
+        "TransformBlock.translation",
+        "TransformBlock.rotation",
+        "TransformBlock.projection_matrix",
+    };
+    GLuint uniformIndices[4];
+    glGetUniformIndices(myShader->programID, 4, uniformNames, uniformIndices);
+
     Uint32 tNow = SDL_GetTicks();
     Uint32 tPrev = SDL_GetTicks();
     bool quit = false;
