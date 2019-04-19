@@ -9,31 +9,39 @@ GLuint buffer;
 void renderAll()
 {
     glClearColor(0.2f, 0.2f, 0.4f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glClearBufferfi(GL_DEPTH_STENCIL, 0.0f, 1.0f, 0.0f);
 
     float currentTime = (float)SDL_GetTicks() / 1000.0f;
-    float tc = currentTime * 0.1f * 3.14f;
-    glm::mat4 mv_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -10.0f));
-    mv_matrix = glm::translate(mv_matrix, glm::vec3(sinf(2.1f*tc)*0.5f,
-                                                    cosf(1.7f*tc)*0.5f,
-                                                    sinf(1.3f*tc)*cosf(1.5f*tc)*2.0f));
-    mv_matrix = glm::rotate(mv_matrix, currentTime*45.0f*0.1f, glm::vec3(0.0f, 1.0f, 0.0f));
-    mv_matrix = glm::rotate(mv_matrix, currentTime*81.0f*0.1f, glm::vec3(1.0f, 0.0f, 0.0f));
+    float tc;
 
     int window_width, window_height;
     SDL_GetWindowSize(myWindow, &window_width, &window_height);
     glm::mat4 proj_matrix = glm::perspective(50.0f, (float)window_width/(float)window_height, 0.1f, 1000.0f);
-
-    glm::mat4 scale_matrix = glm::scale(glm::mat4(1.0f), glm::vec3(0.5f));
+    glm::mat4 scale_matrix = glm::scale(glm::mat4(1.0f), glm::vec3(0.2f));
+    glm::mat4 mv_matrix;
 
     myShader->use();
     
-    glUniformMatrix4fv(glGetUniformLocation(myShader->programID, "mv_matrix"), 1, GL_FALSE, glm::value_ptr(mv_matrix));
     glUniformMatrix4fv(glGetUniformLocation(myShader->programID, "proj_matrix"), 1, GL_FALSE, glm::value_ptr(proj_matrix));
     glUniformMatrix4fv(glGetUniformLocation(myShader->programID, "scale_matrix"), 1, GL_FALSE, glm::value_ptr(scale_matrix));
 
     glBindVertexArray(VAO);
-    glDrawArrays(GL_TRIANGLES, 0, 36);
+
+    for(int i = 0; i < 240; i++)
+    {
+        tc = (float)i + currentTime * 0.3f;
+        mv_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -20.0f));
+        mv_matrix = glm::translate(mv_matrix, glm::vec3(sinf(2.1f*tc)*2.0f,
+                                                        cosf(1.7f*tc)*2.0f,
+                                                        sinf(1.3f*tc)*cosf(1.5f*tc)*2.0f));
+        mv_matrix = glm::rotate(mv_matrix, currentTime*45.0f*0.1f, glm::vec3(0.0f, 1.0f, 0.0f));
+        mv_matrix = glm::rotate(mv_matrix, currentTime*21.0f*0.1f, glm::vec3(1.0f, 0.0f, 0.0f));
+        glUniformMatrix4fv(glGetUniformLocation(myShader->programID, "mv_matrix"), 1, GL_FALSE, glm::value_ptr(mv_matrix));
+
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+    }
+
     glBindVertexArray(0);
 
     SDL_GL_SwapWindow(myWindow);

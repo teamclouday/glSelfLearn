@@ -33,6 +33,7 @@ void initAll()
     }
     glewExperimental = GL_TRUE;
     glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
     glEnable(GL_CULL_FACE);
     glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
     // glEnable(GL_DEBUG_OUTPUT);
@@ -62,7 +63,14 @@ bool pollEvents()
             switch(e.key.keysym.sym)
             {
                 case SDLK_ESCAPE:
-                return true;
+                    return true;
+                case SDLK_F11:
+                {
+                    bool isFullScreen = SDL_GetWindowFlags(myWindow) & SDL_WINDOW_FULLSCREEN_DESKTOP;
+                    SDL_SetWindowFullscreen(myWindow, isFullScreen ? 0 : SDL_WINDOW_FULLSCREEN_DESKTOP);
+                    if(isFullScreen)
+                        SDL_SetWindowPosition(myWindow, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+                }
             }
         }
         else if(e.type == SDL_WINDOWEVENT)
