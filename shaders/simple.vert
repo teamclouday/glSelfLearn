@@ -10,6 +10,21 @@ uniform mat4 mv_matrix;
 uniform mat4 proj_matrix;
 uniform mat4 scale_matrix;
 
+struct my_structure
+{
+    int a;
+    vec3 b;
+    mat4 c;
+};
+
+layout (binding = 0, std430) buffer my_storage_block
+{
+    vec4 aa;
+    vec3 bb;
+    int cc;
+    my_structure dd;
+};
+
 void main()
 {
     gl_Position = proj_matrix * mv_matrix * scale_matrix * vec4(position, 1.0);
