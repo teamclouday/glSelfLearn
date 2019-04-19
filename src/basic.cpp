@@ -23,7 +23,7 @@ void initAll()
                                 SDL_WINDOWPOS_CENTERED,
                                 WINDOW_WIDTH,
                                 WINDOW_HEIGHT,
-                                SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI);
+                                SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE);
     myContext = SDL_GL_CreateContext(myWindow);
     SDL_GL_SetSwapInterval(1);
     if(glewInit() != GLEW_OK)
@@ -34,6 +34,7 @@ void initAll()
     glewExperimental = GL_TRUE;
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
+    glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
     // glEnable(GL_DEBUG_OUTPUT);
     // glDebugMessageCallback(MessageCallback, 0);
 }
@@ -62,6 +63,14 @@ bool pollEvents()
             {
                 case SDLK_ESCAPE:
                 return true;
+            }
+        }
+        else if(e.type == SDL_WINDOWEVENT)
+        {
+            switch(e.window.event)
+            {
+                case SDL_WINDOWEVENT_SIZE_CHANGED:
+                    glViewport(0, 0, e.window.data1, e.window.data2);
             }
         }
     }

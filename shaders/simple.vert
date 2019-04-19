@@ -1,19 +1,17 @@
 #version 450 core
-layout (location = 0) in vec4 position;
-layout (location = 1) in vec3 color;
+layout (location = 0) in vec3 position;
 
-out vec4 vs_color;
-
-layout(std140) uniform TransformBlock
+out VS_OUT
 {
-    float scale;
-    vec3 translation;
-    float rotation[3];
-    mat4 projection_matrix;
-} transform;
+    vec4 color;
+} vs_out;
+
+uniform mat4 mv_matrix;
+uniform mat4 proj_matrix;
+uniform mat4 scale_matrix;
 
 void main()
 {
-    gl_Position = position;
-    vs_color = vec4(color, 1.0);
+    gl_Position = proj_matrix * mv_matrix * scale_matrix * vec4(position, 1.0);
+    vs_out.color = vec4(position, 1.0) * 2.0 + vec4(0.5, 0.5, 0.5, 0.0);
 }
