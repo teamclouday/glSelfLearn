@@ -28,7 +28,7 @@ void renderAll()
 
     glBindVertexArray(VAO);
 
-    for(int i = 0; i < 240; i++)
+    for(int i = 0; i < 500; i++)
     {
         tc = (float)i + currentTime * 0.3f;
         mv_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -20.0f));
