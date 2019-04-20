@@ -13,11 +13,8 @@ void renderAll()
     glClearBufferfi(GL_DEPTH_STENCIL, 0.0f, 1.0f, 0.0f);
 
     // float currentTime = (float)SDL_GetTicks() / 1000.0f;
-    
-    glm::mat4 transform_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -5.0f));
 
     myShader->use();
-    glUniformMatrix4fv(glGetUniformLocation(myShader->programID, "transform_matrix"), 1, GL_FALSE, glm::value_ptr(transform_matrix));
 
     glBindVertexArray(VAO);
 
@@ -41,7 +38,7 @@ int main(int argc, char *argv[])
 
     static const GLfloat vertex_data[] = {
         -0.5f,  0.5f, 0.5f, 1.0f,
-        0.0f, 1.0f, 0.3f, 1.0f,
+        0.5f, 0.5f, 0.3f, 1.0f,
          0.5f, -0.5f, 0.5f, 1.0f,
         0.9f, 0.3f, 0.2f, 1.0f,
          0.5f,  0.5f, 0.5f, 1.0f,

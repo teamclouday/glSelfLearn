@@ -2,16 +2,14 @@
 
 struct Vertex
 {
-    vec3 position;
-    vec3 color;
+    vec4 position;
+    vec4 color;
 };
 
 layout (binding=0, std430) buffer my_vertices
 {
     Vertex vertices[];
 };
-
-uniform mat4 transform_matrix;
 
 out VS_OUT
 {
@@ -20,6 +18,7 @@ out VS_OUT
 
 void main()
 {
-    gl_Position = vec4(vertices[gl_VertexID].position, 1.0);
-    vs_out.color = vec4(vertices[gl_VertexID].color, 1.0);
+    memoryBarrier();
+    gl_Position = vertices[gl_VertexID].position;
+    vs_out.color = vertices[gl_VertexID].color;
 }
