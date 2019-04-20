@@ -5,6 +5,7 @@ SDL_GLContext myContext = NULL;
 Shader *myShader = nullptr;
 GLuint VAO;
 GLuint buffer;
+GLuint buf;
 
 void renderAll()
 {
@@ -18,7 +19,7 @@ void renderAll()
 
     glBindVertexArray(VAO);
 
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, buffer);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, buffer);
     glDrawArrays(GL_TRIANGLES, 0, 3);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
@@ -48,8 +49,30 @@ int main(int argc, char *argv[])
     glGenBuffers(1, &buffer);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, buffer);
     glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(vertex_data), vertex_data, GL_DYNAMIC_COPY);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, buffer);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-    
+
+    glGenBuffers(1, &buf);
+    glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, buf);
+    glBufferData(GL_ATOMIC_COUNTER_BUFFER, 16*sizeof(GLuint), NULL, GL_DYNAMIC_COPY);
+    glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 3, buf);
+    glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
+
+    glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, buf);
+    const GLuint zero = 0;
+    // method 1
+    glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 2*sizeof(GLuint), sizeof(GLuint), &zero);
+
+    // method 2
+    GLuint *data = (GLuint *)glMapBufferRange(GL_ATOMIC_COUNTER_BUFFER, 0, 16*sizeof(GLuint), GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT);
+    data[2] = 0;
+    glUnmapBuffer(GL_ATOMIC_COUNTER_BUFFER);
+
+    // method 3
+    glClearBufferSubData(GL_ATOMIC_COUNTER_BUFFER, GL_R32UI, 2*sizeof(GLuint), sizeof(GLuint), GL_RED_INTEGER, GL_UNSIGNED_INT, &zero);
+
+    glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
+
 
     Uint32 tNow = SDL_GetTicks();
     Uint32 tPrev = SDL_GetTicks();

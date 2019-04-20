@@ -11,6 +11,8 @@ layout (binding=0, std430) buffer my_vertices
     Vertex vertices[];
 };
 
+layout (binding=3, offset=8) uniform atomic_uint my_variable;
+
 out VS_OUT
 {
     vec4 color;
