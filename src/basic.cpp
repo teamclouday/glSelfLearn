@@ -36,8 +36,8 @@ void initAll()
     glDepthFunc(GL_LEQUAL);
     glEnable(GL_CULL_FACE);
     glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
-    glEnable(GL_DEBUG_OUTPUT);
-    glDebugMessageCallback(MessageCallback, 0);
+    // glEnable(GL_DEBUG_OUTPUT);
+    // glDebugMessageCallback(MessageCallback, 0);
 }
 
 void timer(Uint32 *now, Uint32 *prev)

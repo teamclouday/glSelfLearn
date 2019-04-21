@@ -1,17 +1,12 @@
 #version 450 core
 
-layout (binding=0) uniform area_block
-{
-    uint counter_value;
-};
+layout (binding=0, offset=0) uniform atomic_uint atom;
 
 out vec4 color;
 
-uniform float max_area;
-
 void main()
 {
-    float brightness = clamp(float(counter_value)/max_area, 0.0, 1.0);
-    color = vec4(brightness, brightness, brightness, 1.0);
-    // color = vec4(0.0, 0.0, 0.0, 1.0);
+    uint counter = atomicCounterIncrement(atom);
+    float r = (float(counter) / 255.0) / 255.0 / 2.0;
+    color = vec4(r, r, r, 1.0);
 }
