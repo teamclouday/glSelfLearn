@@ -18,6 +18,7 @@ public:
     void add(std::string path, GLenum shaderType);
     void compile();
     void use();
+    void disuse();
     GLuint programID;
 private:
     std::vector<GLuint> shaderFiles;
