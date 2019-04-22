@@ -27,11 +27,13 @@ include_directories(
     "${CMAKE_SOURCE_DIR}/external/glew/include"
     "${CMAKE_SOURCE_DIR}/external/SDL2/include"
     "${CMAKE_SOURCE_DIR}/external/glm/include"
+    "${CMAKE_SOURCE_DIR}/external/SOIL/include"
 )
 
 link_directories(
     "${CMAKE_SOURCE_DIR}/external/glew/lib"
     "${CMAKE_SOURCE_DIR}/external/SDL2/lib"
+    "${CMAKE_SOURCE_DIR}/external/SOIL/lib"
 )
 
 find_package(OpenGL REQUIRED)
@@ -43,5 +45,6 @@ target_link_libraries(run
     SDL2main
     SDL2
     glew32s
+    SOIL
     ${OPENGL_LIBRARIES}
 )

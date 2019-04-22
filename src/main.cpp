@@ -5,7 +5,7 @@ SDL_GLContext myContext = NULL;
 Shader *myShader = nullptr;
 GLuint VAO;
 GLuint buf;
-GLuint buffer;
+GLuint texture;
 
 void renderAll()
 {
@@ -15,19 +15,9 @@ void renderAll()
 
     glBindVertexArray(VAO);
     myShader->use();
-    glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, buffer);
     glDrawArrays(GL_TRIANGLES, 0, 6);
-    glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
     myShader->disuse();
     glBindVertexArray(0);
-
-    glMemoryBarrier(GL_ATOMIC_COUNTER_BARRIER_BIT);
-
-    glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, buffer);
-    GLuint *data = (GLuint *)glMapBufferRange(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), GL_MAP_WRITE_BIT);
-    *data = 0;
-    glUnmapBuffer(GL_ATOMIC_COUNTER_BUFFER);
-    glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
     
     SDL_GL_SwapWindow(myWindow);
 }
@@ -60,12 +50,11 @@ int main(int argc, char *argv[])
     glEnableVertexAttribArray(0);
     glBindVertexArray(0);
 
-    GLuint zero = 0;
-    glGenBuffers(1, &buffer);
-    glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, buffer);
-    glBufferData(GL_ATOMIC_COUNTER_BUFFER, sizeof(GLuint), &zero, GL_DYNAMIC_DRAW);
-    glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 0, buffer);
-    glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
+    glCreateTextures(GL_TEXTURE_2D, 1, &texture);
+    // specify the amount of storage
+    glTextureStorage2D(texture, 1, GL_RGBA32F, 256, 256);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glBindTexture(GL_TEXTURE_2D, 0);
 
     Uint32 tNow = SDL_GetTicks();
     Uint32 tPrev = SDL_GetTicks();
