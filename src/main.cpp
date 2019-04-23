@@ -6,6 +6,7 @@ Shader *myShader = nullptr;
 GLuint VAO;
 GLuint buf[2];
 GLuint tex;
+GLuint sampler;
 
 void renderAll()
 {
@@ -68,6 +69,11 @@ int main(int argc, char *argv[])
     glBindVertexArray(0);
 
     tex = loadTexture("./images/face.png");
+
+    glCreateSamplers(1, &sampler);
+    glSamplerParameteri(sampler, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glSamplerParameteri(sampler, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glBindSampler(tex, sampler);
 
     Uint32 tNow = SDL_GetTicks();
     Uint32 tPrev = SDL_GetTicks();
