@@ -1,6 +1,6 @@
 #version 450 core
 
-uniform sampler2D image;
+layout (binding = 0) uniform sampler2D image;
 
 out vec4 color;
 

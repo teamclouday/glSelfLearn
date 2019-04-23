@@ -15,7 +15,6 @@ void renderAll()
 
     glBindVertexArray(VAO);
     myShader->use();
-    glUniform1i(glGetUniformLocation(myShader->programID, "image"), 0);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, tex);
     glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -69,11 +68,12 @@ int main(int argc, char *argv[])
     glBindVertexArray(0);
 
     tex = loadTexture("./images/face.png");
+    glBindTextureUnit(0, tex);
 
-    glCreateSamplers(1, &sampler);
-    glSamplerParameteri(sampler, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glSamplerParameteri(sampler, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glBindSampler(0, sampler);
+    GLuint textures[3];
+    glBindTextureUnit(1, textures[0]);
+    glBindTextureUnit(2, textures[1]);
+    glBindTextureUnit(3, textures[2]);
 
     Uint32 tNow = SDL_GetTicks();
     Uint32 tPrev = SDL_GetTicks();
