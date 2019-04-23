@@ -8,5 +8,6 @@ in vec2 UV;
 
 void main()
 {
-    color = texture2D(image, UV);
+    // color = texture2D(image, UV);
+    color = texelFetch(image, ivec2(UV*255), 0);
 }
