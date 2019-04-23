@@ -10,6 +10,7 @@
 #define ERROR_SHADER_FILE_NOT_FOUND 3
 #define ERROR_SHADER_COMPILE        4
 #define ERROR_SHADER_PROGRAM_LINK   5
+#define ERROR_READ_IMAGE            6
 
 void GLAPIENTRY
 MessageCallback(GLenum source,

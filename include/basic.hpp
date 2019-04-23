@@ -6,6 +6,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include <SOIL/SOIL.h>
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
@@ -25,3 +27,4 @@ void timer(Uint32 *now, Uint32 *prev);
 bool pollEvents();
 void destroyAll();
 void renderAll();
+GLuint loadTexture(std::string path);
