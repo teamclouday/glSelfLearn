@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <string>
+#include <vector>
 
 #include "shader.hpp"
 #include "myerror.hpp"
@@ -28,3 +29,4 @@ bool pollEvents();
 void destroyAll();
 void renderAll();
 GLuint loadTexture(std::string path);
+GLuint loadTextureArray(std::vector<std::string> path);

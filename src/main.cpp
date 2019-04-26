@@ -67,13 +67,8 @@ int main(int argc, char *argv[])
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2*sizeof(GLfloat), (GLvoid*)0);
     glBindVertexArray(0);
 
-    tex = loadTexture("./images/face.png");
-    glBindTextureUnit(0, tex);
-
-    GLuint textures[3];
-    glBindTextureUnit(1, textures[0]);
-    glBindTextureUnit(2, textures[1]);
-    glBindTextureUnit(3, textures[2]);
+    std::vector<std::string> path = {"./images/colors.png", "face.png"};
+    tex = loadTextureArray(path);
 
     Uint32 tNow = SDL_GetTicks();
     Uint32 tPrev = SDL_GetTicks();
@@ -89,6 +84,27 @@ int main(int argc, char *argv[])
     return 0;
 }
 
+GLuint loadTextureArray(std::vector<std::string> path)
+{
+    std::vector<unsigned char *> data;
+    int width, height;
+    for(unsigned i = 0; i < path.size(); i++)
+    {
+        unsigned char *image = SOIL_load_image(path[i].c_str(), &width, &height, 0, SOIL_LOAD_RGB);
+        data.push_back(image);
+    }
+    GLuint texture;
+    glCreateTextures(GL_TEXTURE_2D_ARRAY, 1, &texture);
+    glTextureStorage3D(texture, 8, GL_RGB8, 256, 256, data.size());
+    for(unsigned i = 0; i < data.size(); i++)
+    {
+        glTextureSubImage3D(texture, 0, 0, 0, i, 256, 256, 1, GL_RGB, GL_UNSIGNED_BYTE, data[i]);
+    }
+    for(unsigned i = 0; i < data.size(); i++)
+        SOIL_free_image_data(data[i]);
+    return texture;
+}
+
 GLuint loadTexture(std::string path)
 {
     GLuint texture;
@@ -102,11 +118,13 @@ GLuint loadTexture(std::string path)
     glCreateTextures(GL_TEXTURE_2D, 1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-    glGenerateMipmap(GL_TEXTURE_2D);
+    glGenerateTextureMipmap(GL_TEXTURE_2D);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);;
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 4);;
     glBindTexture(GL_TEXTURE_2D, 0);
     SOIL_free_image_data(data);
     return texture;
