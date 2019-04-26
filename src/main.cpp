@@ -6,12 +6,20 @@ Shader *myShader = nullptr;
 GLuint VAO;
 GLuint buf[2];
 GLuint tex;
-GLuint sampler;
+GLuint buffer;
 
 void renderAll()
 {
     glClearColor(0.2f, 0.2f, 0.4f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    int w, h;
+    SDL_GetWindowSize(myWindow, &w, &h);
+
+    float tc = (float)(SDL_GetTicks() / 1000.0f);
+    glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), sin(tc)*1.5f, glm::vec3(1.0f, 1.0f, 0.0f));
+
+    glNamedBufferSubData(buffer, 0, sizeof(glm::mat4), glm::value_ptr(rotation));
 
     glBindVertexArray(VAO);
     myShader->use();
@@ -67,8 +75,16 @@ int main(int argc, char *argv[])
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2*sizeof(GLfloat), (GLvoid*)0);
     glBindVertexArray(0);
 
-    std::vector<std::string> path = {"./images/colors.png", "face.png"};
-    tex = loadTextureArray(path);
+    // std::vector<std::string> path = {"./images/colors.png", "face.png"};
+    // tex = loadTextureArray(path);
+    tex = loadTexture("./images/colors.png");
+    glBindTextureUnit(0, tex);
+
+    glCreateBuffers(1, &buffer);
+    glBindBuffer(GL_UNIFORM_BUFFER, buffer);
+    glBufferStorage(GL_UNIFORM_BUFFER, sizeof(glm::mat4), NULL, GL_DYNAMIC_STORAGE_BIT);
+    glBindBufferBase(GL_UNIFORM_BUFFER, 1, buffer);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
     Uint32 tNow = SDL_GetTicks();
     Uint32 tPrev = SDL_GetTicks();
