@@ -10,6 +10,9 @@ GLuint buffer;
 
 void renderAll()
 {
+    int w, h;
+    SDL_GetWindowSize(myWindow, &w, &h);
+    glViewport(0, 0, w, h);
     glClearColor(0.2f, 0.2f, 0.4f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
