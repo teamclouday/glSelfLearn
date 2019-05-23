@@ -16,7 +16,7 @@ public:
     Shader();
     ~Shader();
     void add(std::string path, GLenum shaderType);
-    void compile();
+    void compile(bool special);
     void use();
     void disuse();
     GLuint programID;

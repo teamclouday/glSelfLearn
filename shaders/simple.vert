@@ -1,11 +1,7 @@
 #version 450 core
-layout (location = 0) in vec4 position;
-layout (location = 1) in vec2 uv;
-
-out vec2 UV;
+layout (location = 0) in vec3 position;
 
 void main()
 {
-    gl_Position = position;
-    UV = vec2(uv.x, 1-uv.y);
+    gl_Position = vec4(position * 0.03, 1.0);
 }

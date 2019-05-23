@@ -45,13 +45,26 @@ void Shader::add(std::string path, GLenum shaderType)
     this->shaderFiles.push_back(shader);
 }
 
-void Shader::compile()
+void Shader::compile(bool special)
 {
     this->programID = glCreateProgram();
+
     for(unsigned i = 0; i < this->shaderFiles.size(); i++)
     {
         glAttachShader(this->programID, this->shaderFiles[i]);
     }
+
+    if(special)
+    {
+        // add whatever code to change the program
+        static const char *tf_varyings[] = 
+        {
+            "tf_position_mass",
+            "tf_velocity"
+        };
+        glTransformFeedbackVaryings(this->programID, 2, tf_varyings, GL_SEPARATE_ATTRIBS);
+    }
+    
     glLinkProgram(this->programID);
 
     GLint success;
