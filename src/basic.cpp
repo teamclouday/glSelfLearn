@@ -3,6 +3,7 @@
 extern SDL_Window *myWindow;
 extern SDL_GLContext myContext;
 extern Shader *myShader;
+extern bool isPoint;
 
 void initAll()
 {
@@ -70,6 +71,10 @@ bool pollEvents()
                     SDL_SetWindowPosition(myWindow, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
                     SDL_SetWindowFullscreen(myWindow, isFullScreen ? 0 : SDL_WINDOW_FULLSCREEN_DESKTOP);
                 }
+                case SDLK_s:
+                    isPoint = !isPoint;
+                    break;
+
             }
         }
         else if(e.type == SDL_WINDOWEVENT)

@@ -13,11 +13,13 @@ Shader *updateShader = nullptr;
 std::vector<GLuint> VAO(2);
 std::vector<GLuint> VBO(5);
 std::vector<GLuint> TBO(2);
+GLuint IBO;
 std::vector<glm::vec4> initial_positions(POINTS_ALL);
 std::vector<glm::vec3> initial_velocities(POINTS_ALL);
 std::vector<glm::ivec4> connection_vectors(POINTS_ALL);
 
 int iterIdx;
+bool isPoint;
 
 void SetUpPoints();
 
@@ -48,8 +50,17 @@ void renderAll()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
     renderShader->use();
-    glPointSize(4.0f);
-    glDrawArrays(GL_POINTS, 0, POINTS_ALL);
+    if(isPoint)
+    {
+        glPointSize(4.0f);
+        glDrawArrays(GL_POINTS, 0, POINTS_ALL);
+    }
+    else
+    {
+        int lines = (POINTS_X - 1) * POINTS_Y + (POINTS_Y - 1) * POINTS_X;
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
+        glDrawElements(GL_LINES, lines * 2, GL_UNSIGNED_INT, NULL);
+    }
     renderShader->disuse();
 
     SDL_GL_SwapWindow(myWindow);
@@ -70,6 +81,9 @@ int main(int argc, char *argv[])
     SetUpPoints();
 
     iterIdx = 0;
+    isPoint = true;
+
+    printf("Press S to switch between Points and Lines\n");
 
     Uint32 tNow = SDL_GetTicks();
     Uint32 tPrev = SDL_GetTicks();
@@ -141,6 +155,34 @@ void SetUpPoints()
     glTexBuffer(GL_TEXTURE_BUFFER, GL_RGBA32F, VBO[0]);
     glBindTexture(GL_TEXTURE_BUFFER, TBO[1]);
     glTexBuffer(GL_TEXTURE_BUFFER, GL_RGBA32F, VBO[1]);
+
+    int lines = (POINTS_X - 1) * POINTS_Y + (POINTS_Y - 1) * POINTS_X;
+
+    glGenBuffers(1, &IBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, 2*lines*sizeof(int), NULL, GL_STATIC_DRAW);
+
+    int *ptr = (int*)glMapBufferRange(GL_ELEMENT_ARRAY_BUFFER, 0, 2*lines*sizeof(int), GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
+
+    for(int j = 0; j < POINTS_Y; j++)
+    {
+        for(int i = 0; i < POINTS_X - 1; i++)
+        {
+            *ptr++ = i + j * POINTS_X;
+            *ptr++ = 1 + i + j * POINTS_X;
+        }
+    }
+
+    for(int i = 0; i < POINTS_X; i++)
+    {
+        for(int j = 0; j < POINTS_Y - 1; j++)
+        {
+            *ptr++ = i + j * POINTS_X;
+            *ptr++ = POINTS_X + i + j * POINTS_X;
+        }
+    }
+
+    glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
 }
 
 
