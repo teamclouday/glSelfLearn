@@ -1,67 +1,28 @@
 #include "basic.hpp"
 
-#define POINTS_X 50
-#define POINTS_Y 50
-#define POINTS_ALL (POINTS_X * POINTS_Y)
-
-#define NUM_ITER 20
-
 SDL_Window *myWindow = nullptr;
 SDL_GLContext myContext = NULL;
-Shader *renderShader = nullptr;
-Shader *updateShader = nullptr;
-std::vector<GLuint> VAO(2);
-std::vector<GLuint> VBO(5);
-std::vector<GLuint> TBO(2);
-GLuint IBO;
-std::vector<glm::vec4> initial_positions(POINTS_ALL);
-std::vector<glm::vec3> initial_velocities(POINTS_ALL);
-std::vector<glm::ivec4> connection_vectors(POINTS_ALL);
+Shader *myShader = nullptr;
+GLuint VAO;
+GLuint VBO;
 
-int iterIdx;
-bool isPoint;
-
-void SetUpPoints();
 
 void renderAll()
 {
-    updateShader->use();
-    glEnable(GL_RASTERIZER_DISCARD);
-
-    for (int i = NUM_ITER; i != 0; i--)
-    {
-        glBindVertexArray(VAO[iterIdx & 1]);
-        glBindTexture(GL_TEXTURE_BUFFER, TBO[iterIdx & 1]);
-        iterIdx++;
-        glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, VBO[iterIdx & 1]);
-        glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 1, VBO[2 + (iterIdx & 1)]);
-        glBeginTransformFeedback(GL_POINTS);
-        glDrawArrays(GL_POINTS, 0, POINTS_ALL);
-        glEndTransformFeedback();
-    }
-
-    glDisable(GL_RASTERIZER_DISCARD);
-    updateShader->disuse();
-
     int w, h;
     SDL_GetWindowSize(myWindow, &w, &h);
     glViewport(0, 0, w, h);
     glClearColor(0.2f, 0.2f, 0.4f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    
-    renderShader->use();
-    if(isPoint)
-    {
-        glPointSize(4.0f);
-        glDrawArrays(GL_POINTS, 0, POINTS_ALL);
-    }
-    else
-    {
-        int lines = (POINTS_X - 1) * POINTS_Y + (POINTS_Y - 1) * POINTS_X;
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
-        glDrawElements(GL_LINES, lines * 2, GL_UNSIGNED_INT, NULL);
-    }
-    renderShader->disuse();
+
+    myShader->use();
+    glBindVertexArray(VAO);
+    glPatchParameteri(GL_PATCH_VERTICES, 4);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glDrawArrays(GL_PATCHES, 0, 4);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glBindVertexArray(0);
+    myShader->disuse();
 
     SDL_GL_SwapWindow(myWindow);
 }
@@ -70,20 +31,31 @@ int main(int argc, char *argv[])
 {
     initAll();
 
-    updateShader = new Shader();
-    updateShader->add("./shaders/special.vert", GL_VERTEX_SHADER);
-    updateShader->compile(true);
-    renderShader = new Shader();
-    renderShader->add("./shaders/simple.vert", GL_VERTEX_SHADER);
-    renderShader->add("./shaders/simple.frag", GL_FRAGMENT_SHADER);
-    renderShader->compile(false);
+    myShader = new Shader();
+    myShader->add("./shaders/simple.vert", GL_VERTEX_SHADER);
+    myShader->add("./shaders/simple.tesc", GL_TESS_CONTROL_SHADER);
+    myShader->add("./shaders/simple.tese", GL_TESS_EVALUATION_SHADER);
+    myShader->add("./shaders/simple.frag", GL_FRAGMENT_SHADER);
 
-    SetUpPoints();
+    myShader->compile(false);
 
-    iterIdx = 0;
-    isPoint = true;
+    printf("%s\n", glGetString(GL_RENDERER));
 
-    printf("Press S to switch between Points and Lines\n");
+    static const GLfloat pos[] = {
+        -0.5f, -0.5f,
+         0.5f, -0.5f,
+        -0.5f,  0.5f,
+         0.5f,  0.5f,
+    };
+
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(pos), pos, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
+    glEnableVertexAttribArray(0);
+    glBindVertexArray(0);
 
     Uint32 tNow = SDL_GetTicks();
     Uint32 tPrev = SDL_GetTicks();
@@ -98,93 +70,6 @@ int main(int argc, char *argv[])
     destroyAll();
     return 0;
 }
-
-void SetUpPoints()
-{
-    int n = 0;
-    for(int j = 0; j < POINTS_Y; j++)
-    {
-        float fj = (float)j / (float)POINTS_Y;
-        for(int i = 0; i < POINTS_X; i++)
-        {
-            float fi = (float)i / (float)POINTS_X;
-            initial_positions[n] = glm::vec4((fi-0.5f)*(float)POINTS_X,
-                                             (fj-0.5f)*(float)POINTS_Y,
-                                             0.6f*sinf(fi)*cosf(fj),
-                                             1.0f);
-            initial_velocities[n] = glm::vec3(0.0f);
-            connection_vectors[n] = glm::ivec4(-1);
-            if(j != (POINTS_Y - 1))
-            {
-                if(i != 0)
-                    connection_vectors[n][0] = n - 1;
-                if(j != 0)
-                    connection_vectors[n][1] = n - POINTS_X;
-                if(i != (POINTS_X - 1))
-                    connection_vectors[n][2] = n + 1;
-                if(j != (POINTS_Y - 1))
-                    connection_vectors[n][3] = n + POINTS_X;
-            }
-            n++;
-        }
-    }
-
-    glGenVertexArrays(2, &VAO[0]);
-    glGenBuffers(5, &VBO[0]);
-    for(int i = 0; i < 2; i++)
-    {
-        glBindVertexArray(VAO[i]);
-        glBindBuffer(GL_ARRAY_BUFFER, VBO[i]);
-        glBufferData(GL_ARRAY_BUFFER, POINTS_ALL*sizeof(glm::vec4), glm::value_ptr(initial_positions[0]), GL_DYNAMIC_COPY);
-        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, NULL);
-        glEnableVertexAttribArray(0);
-
-        glBindBuffer(GL_ARRAY_BUFFER, VBO[2+i]);
-        glBufferData(GL_ARRAY_BUFFER, POINTS_ALL*sizeof(glm::vec3), glm::value_ptr(initial_velocities[0]), GL_DYNAMIC_COPY);
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, NULL);
-        glEnableVertexAttribArray(1);
-
-        glBindBuffer(GL_ARRAY_BUFFER, VBO[4]);
-        glBufferData(GL_ARRAY_BUFFER, POINTS_ALL*sizeof(glm::ivec4), glm::value_ptr(connection_vectors[0]), GL_STATIC_DRAW);
-        glVertexAttribIPointer(2, 4, GL_INT, 0, NULL);
-        glEnableVertexAttribArray(2);
-    }
-
-    glGenTextures(2, &TBO[0]);
-    glBindTexture(GL_TEXTURE_BUFFER, TBO[0]);
-    glTexBuffer(GL_TEXTURE_BUFFER, GL_RGBA32F, VBO[0]);
-    glBindTexture(GL_TEXTURE_BUFFER, TBO[1]);
-    glTexBuffer(GL_TEXTURE_BUFFER, GL_RGBA32F, VBO[1]);
-
-    int lines = (POINTS_X - 1) * POINTS_Y + (POINTS_Y - 1) * POINTS_X;
-
-    glGenBuffers(1, &IBO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, 2*lines*sizeof(int), NULL, GL_STATIC_DRAW);
-
-    int *ptr = (int*)glMapBufferRange(GL_ELEMENT_ARRAY_BUFFER, 0, 2*lines*sizeof(int), GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
-
-    for(int j = 0; j < POINTS_Y; j++)
-    {
-        for(int i = 0; i < POINTS_X - 1; i++)
-        {
-            *ptr++ = i + j * POINTS_X;
-            *ptr++ = 1 + i + j * POINTS_X;
-        }
-    }
-
-    for(int i = 0; i < POINTS_X; i++)
-    {
-        for(int j = 0; j < POINTS_Y - 1; j++)
-        {
-            *ptr++ = i + j * POINTS_X;
-            *ptr++ = POINTS_X + i + j * POINTS_X;
-        }
-    }
-
-    glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
-}
-
 
 
 GLuint loadTextureArray(std::vector<std::string> path)
