@@ -17,7 +17,11 @@ void renderAll()
 
     myShader->use();
     glBindVertexArray(VAO);
-    // glPatchParameteri(GL_PATCH_VERTICES, 4);
+    glPatchParameteri(GL_PATCH_VERTICES, 3);
+    float inner[] = {5.3f};
+    float outer[] = {5.3f, 5.3f, 5.3f};
+    glPatchParameterfv(GL_PATCH_DEFAULT_INNER_LEVEL, inner);
+    glPatchParameterfv(GL_PATCH_DEFAULT_OUTER_LEVEL, outer);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glDrawArrays(GL_PATCHES, 0, 3);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -33,7 +37,7 @@ int main(int argc, char *argv[])
 
     myShader = new Shader();
     myShader->add("./shaders/simple.vert", GL_VERTEX_SHADER);
-    myShader->add("./shaders/simple.tesc", GL_TESS_CONTROL_SHADER);
+    // myShader->add("./shaders/simple.tesc", GL_TESS_CONTROL_SHADER);
     myShader->add("./shaders/simple.tese", GL_TESS_EVALUATION_SHADER);
     myShader->add("./shaders/simple.frag", GL_FRAGMENT_SHADER);
 
