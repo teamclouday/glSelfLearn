@@ -17,9 +17,9 @@ void renderAll()
 
     myShader->use();
     glBindVertexArray(VAO);
-    glPatchParameteri(GL_PATCH_VERTICES, 3);
+    glPatchParameteri(GL_PATCH_VERTICES, 4);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    glDrawArrays(GL_PATCHES, 0, 3);
+    glDrawArrays(GL_PATCHES, 0, 4);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glBindVertexArray(0);
     myShader->disuse();
@@ -42,14 +42,14 @@ int main(int argc, char *argv[])
     printf("%s\n", glGetString(GL_RENDERER));
 
     static const GLfloat pos[] = {
-        // -0.5f, -0.5f,
-        //  0.5f, -0.5f,
-        // -0.5f,  0.5f,
-        //  0.5f,  0.5f,
-
         -0.5f, -0.5f,
          0.5f, -0.5f,
+        -0.5f,  0.5f,
          0.5f,  0.5f,
+
+        // -0.5f, -0.5f,
+        //  0.5f, -0.5f,
+        //  0.5f,  0.5f,
     };
 
     glGenVertexArrays(1, &VAO);
