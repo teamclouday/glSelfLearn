@@ -21,7 +21,7 @@
 #define WINDOW_HEIGHT 600
 #define WINDOW_TITLE  "glSelfLearn"
 
-#define SPF (1000 / 30)
+#define SPF (1000 / 60)
 
 void initAll();
 void timer(Uint32 *now, Uint32 *prev);
