@@ -3,8 +3,7 @@
 SDL_Window *myWindow = nullptr;
 SDL_GLContext myContext = NULL;
 Shader *myShader = nullptr;
-GLuint VAO, tex, tex_disp;
-float dmap_depth;
+GLuint VAO, VBO;
 bool lineMode;
 
 void renderAll()
@@ -15,33 +14,62 @@ void renderAll()
     glClearColor(0.2f, 0.2f, 0.4f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    float tt = (float)SDL_GetTicks() * 0.0001f;
-    float rr = sinf(tt * 5.37f) * 15.0f + 16.0f;
-    float hh = cosf(tt * 4.79f) * 2.0f + 3.2f;
-    glm::vec3 pos = glm::vec3(sinf(tt)*rr, hh, cosf(tt)*rr);
+    float tt = (float)SDL_GetTicks() * 0.01f;
 
-    glm::mat4 model(1.0f);
-    model = glm::translate(model, glm::vec3(0.0f, -6.0f, 0.0f));
+    static const GLfloat patch_initializer[] =
+    {
+        -1.0f,  -1.0f,  0.0f,
+        -0.33f, -1.0f,  0.0f,
+         0.33f, -1.0f,  0.0f,
+         1.0f,  -1.0f,  0.0f,
+
+        -1.0f,  -0.33f, 0.0f,
+        -0.33f, -0.33f, 0.0f,
+         0.33f, -0.33f, 0.0f,
+         1.0f,  -0.33f, 0.0f,
+
+        -1.0f,   0.33f, 0.0f,
+        -0.33f,  0.33f, 0.0f,
+         0.33f,  0.33f, 0.0f,
+         1.0f,   0.33f, 0.0f,
+
+        -1.0f,   1.0f,  0.0f,
+        -0.33f,  1.0f,  0.0f,
+         0.33f,  1.0f,  0.0f,
+         1.0f,   1.0f,  0.0f,
+    };
+
+    GLfloat *ptr = (GLfloat*)glMapNamedBufferRange(VBO, 0, 3*16*sizeof(GLfloat), GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
+    memcpy(ptr, patch_initializer, sizeof(patch_initializer));
+    ptr += 2;
+    for(int i = 0; i < 16; i++)
+    {
+        float fi = (float)i / 16.0f;
+        *ptr = sinf(tt*(0.2f + fi*0.3f));
+        ptr+=3;
+    }
+    glUnmapNamedBuffer(VBO);
+
     glm::mat4 proj_matrix = glm::perspective(45.0f, (float)w / (float)h, 0.1f, 1000.0f);
-    glm::mat4 mv_matrix = glm::lookAt(pos, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-    glm::mat4 mvp = proj_matrix * mv_matrix * model;
+    glm::mat4 mv_matrix(1.0f);
+    mv_matrix = glm::translate(mv_matrix, glm::vec3(0.0f, 0.0f, -4.0f));
+    mv_matrix = glm::rotate(mv_matrix, 20.0f, glm::vec3(tt * 10.0f, 0.0f, 1.0f));
+    mv_matrix = glm::rotate(mv_matrix, 20.0f, glm::vec3(tt * 17.0f, 1.0f, 0.0f));
 
 
     myShader->use();
     glBindVertexArray(VAO);
-    glActiveTexture(GL_TEXTURE0);
-    glActiveTexture(GL_TEXTURE1);
 
-    glUniform1fv(glGetUniformLocation(myShader->programID, "dmap_depth"), 1, &dmap_depth);
-    glUniformMatrix4fv(glGetUniformLocation(myShader->programID, "mvp"), 1, GL_FALSE, glm::value_ptr(mvp));
+    glUniformMatrix4fv(glGetUniformLocation(myShader->programID, "proj_matrix"), 1, GL_FALSE, glm::value_ptr(proj_matrix));
+    glUniformMatrix4fv(glGetUniformLocation(myShader->programID, "mv_matrix"), 1, GL_FALSE, glm::value_ptr(mv_matrix));
     
-    glPatchParameteri(GL_PATCH_VERTICES, 4);
+    glPatchParameteri(GL_PATCH_VERTICES, 16);
 
     if(lineMode)
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     else
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    glDrawArraysInstanced(GL_PATCHES, 0, 4, 64*64);
+    glDrawArrays(GL_PATCHES, 0, 16);
 
     glBindVertexArray(0);
     myShader->disuse();
@@ -54,20 +82,22 @@ int main(int argc, char *argv[])
     initAll();
 
     myShader = new Shader();
-    myShader->add("./shaders/terrain.vert", GL_VERTEX_SHADER);
-    myShader->add("./shaders/terrain.tesc", GL_TESS_CONTROL_SHADER);
-    myShader->add("./shaders/terrain.tese", GL_TESS_EVALUATION_SHADER);
-    myShader->add("./shaders/terrain.frag", GL_FRAGMENT_SHADER);
+    myShader->add("./shaders/bezier.vert", GL_VERTEX_SHADER);
+    myShader->add("./shaders/bezier.tesc", GL_TESS_CONTROL_SHADER);
+    myShader->add("./shaders/bezier.tese", GL_TESS_EVALUATION_SHADER);
+    myShader->add("./shaders/bezier.frag", GL_FRAGMENT_SHADER);
     myShader->compile(false);
 
     glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, 3*16*sizeof(GLfloat), NULL, GL_DYNAMIC_COPY);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(GLfloat), NULL);
+    glEnableVertexAttribArray(0);
+    glBindVertexArray(0);
 
-    tex = loadTexture("./images/grass.jpg");
-    glBindTextureUnit(1, tex);
-    tex_disp = loadTexture("./images/terrain.jpg");
-    glBindTextureUnit(0, tex_disp);
 
-    dmap_depth = 6.0f;
     lineMode = false;
 
     printf("%s\n", glGetString(GL_RENDERER));
