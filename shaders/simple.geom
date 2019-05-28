@@ -1,10 +1,23 @@
 #version 450 core
 
 layout (triangles) in;
-layout (points, max_vertices = 3) out;
+layout (triangle_strip) out;
+layout (max_vertices = 3) out;
+
+in TES_OUT
+{
+    vec3 N;
+} geo_in[];
+
+out GEO_OUT
+{
+    vec3 N;
+} geo_out;
 
 void main()
 {
+    geo_out.N = geo_in[0].N;
+
     int i;
 
     for(i = 0; i < gl_in.length(); i++)
@@ -12,4 +25,5 @@ void main()
         gl_Position = gl_in[i].gl_Position;
         EmitVertex();
     }
+    EndPrimitive();
 }

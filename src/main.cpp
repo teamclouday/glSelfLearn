@@ -85,6 +85,7 @@ int main(int argc, char *argv[])
     myShader->add("./shaders/bezier.vert", GL_VERTEX_SHADER);
     myShader->add("./shaders/bezier.tesc", GL_TESS_CONTROL_SHADER);
     myShader->add("./shaders/bezier.tese", GL_TESS_EVALUATION_SHADER);
+    myShader->add("./shaders/simple.geom", GL_GEOMETRY_SHADER);
     myShader->add("./shaders/bezier.frag", GL_FRAGMENT_SHADER);
     myShader->compile(false);
 

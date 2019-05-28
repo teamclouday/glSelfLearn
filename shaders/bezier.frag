@@ -2,7 +2,7 @@
 
 out vec4 color;
 
-in TES_OUT
+in GEO_OUT
 {
     vec3 N;
 } fs_in;
