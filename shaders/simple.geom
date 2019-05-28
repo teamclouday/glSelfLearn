@@ -17,12 +17,10 @@ out GEO_OUT
 void main()
 {
     geo_out.N = geo_in[0].N;
-
-    int i;
-
-    for(i = 0; i < gl_in.length(); i++)
+    float explode_factor = 0.5;
+    for(int i = 0; i < gl_in.length(); i++)
     {
-        gl_Position = gl_in[i].gl_Position;
+        gl_Position = gl_in[i].gl_Position + vec4(-explode_factor * geo_in[0].N, 0.0);
         EmitVertex();
     }
     EndPrimitive();
