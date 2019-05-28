@@ -56,6 +56,10 @@ void renderAll()
     mv_matrix = glm::rotate(mv_matrix, 20.0f, glm::vec3(tt * 10.0f, 0.0f, 1.0f));
     mv_matrix = glm::rotate(mv_matrix, 20.0f, glm::vec3(tt * 17.0f, 1.0f, 0.0f));
 
+    glViewportIndexedf(0, 0.0f, 0.0f, (float)w/2.0f, (float)h/2.0f);
+    glViewportIndexedf(1, (float)w/2.0f, 0.0f, (float)w/2.0f, (float)h/2.0f);
+    glViewportIndexedf(2, 0.0f, (float)h/2.0f, (float)w/2.0f, (float)h/2.0f);
+    glViewportIndexedf(3, (float)w/2.0f, (float)h/2.0f, (float)w/2.0f, (float)h/2.0f);
 
     myShader->use();
     glBindVertexArray(VAO);
