@@ -1,10 +1,10 @@
 #version 450 core
 
 out vec4 color;
-
+ 
 in GEO_OUT
 {
-    vec3 N;
+    noperspective vec3 N;
 } fs_in;
 
 void main()

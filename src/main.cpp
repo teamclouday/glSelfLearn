@@ -3,7 +3,7 @@
 SDL_Window *myWindow = nullptr;
 SDL_GLContext myContext = NULL;
 Shader *myShader = nullptr;
-GLuint VAO, VBO;
+GLuint VAO, VBO, EBO;
 bool lineMode;
 
 void renderAll()
@@ -11,70 +11,65 @@ void renderAll()
     int w, h;
     SDL_GetWindowSize(myWindow, &w, &h);
     glViewport(0, 0, w, h);
-    glClearColor(0.2f, 0.2f, 0.4f, 1.0f);
+    glClearColor(0.6f, 0.4f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    float tt = (float)SDL_GetTicks() * 0.01f;
-
-    static const GLfloat patch_initializer[] =
+    static const GLenum blend_func[] = 
     {
-        -1.0f,  -1.0f,  0.0f,
-        -0.33f, -1.0f,  0.0f,
-         0.33f, -1.0f,  0.0f,
-         1.0f,  -1.0f,  0.0f,
-
-        -1.0f,  -0.33f, 0.0f,
-        -0.33f, -0.33f, 0.0f,
-         0.33f, -0.33f, 0.0f,
-         1.0f,  -0.33f, 0.0f,
-
-        -1.0f,   0.33f, 0.0f,
-        -0.33f,  0.33f, 0.0f,
-         0.33f,  0.33f, 0.0f,
-         1.0f,   0.33f, 0.0f,
-
-        -1.0f,   1.0f,  0.0f,
-        -0.33f,  1.0f,  0.0f,
-         0.33f,  1.0f,  0.0f,
-         1.0f,   1.0f,  0.0f,
+        GL_ZERO,
+        GL_ONE,
+        GL_SRC_COLOR,
+        GL_ONE_MINUS_SRC_COLOR,
+        GL_DST_COLOR,
+        GL_ONE_MINUS_DST_COLOR,
+        GL_SRC_ALPHA,
+        GL_ONE_MINUS_SRC_ALPHA,
+        GL_DST_ALPHA,
+        GL_ONE_MINUS_DST_ALPHA,
+        GL_CONSTANT_COLOR,
+        GL_ONE_MINUS_CONSTANT_COLOR,
+        GL_CONSTANT_ALPHA,
+        GL_ONE_MINUS_CONSTANT_ALPHA,
+        GL_SRC_ALPHA_SATURATE,
+        GL_SRC1_COLOR,
+        GL_ONE_MINUS_SRC1_COLOR,
+        GL_SRC1_ALPHA,
+        GL_ONE_MINUS_SRC1_ALPHA,
     };
 
-    GLfloat *ptr = (GLfloat*)glMapNamedBufferRange(VBO, 0, 3*16*sizeof(GLfloat), GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
-    memcpy(ptr, patch_initializer, sizeof(patch_initializer));
-    ptr += 2;
-    for(int i = 0; i < 16; i++)
-    {
-        float fi = (float)i / 16.0f;
-        *ptr = sinf(tt*(0.2f + fi*0.3f));
-        ptr+=3;
-    }
-    glUnmapNamedBuffer(VBO);
+    static const int num_blend_funcs = (int)(sizeof(blend_func) / sizeof(blend_func[0]));
 
-    glm::mat4 proj_matrix = glm::perspective(45.0f, (float)w / (float)h, 0.1f, 1000.0f);
-    glm::mat4 mv_matrix(1.0f);
-    mv_matrix = glm::translate(mv_matrix, glm::vec3(0.0f, 0.0f, -4.0f));
-    mv_matrix = glm::rotate(mv_matrix, 20.0f, glm::vec3(tt * 10.0f, 0.0f, 1.0f));
-    mv_matrix = glm::rotate(mv_matrix, 20.0f, glm::vec3(tt * 17.0f, 1.0f, 0.0f));
-
-    glViewportIndexedf(0, 0.0f, 0.0f, (float)w/2.0f, (float)h/2.0f);
-    glViewportIndexedf(1, (float)w/2.0f, 0.0f, (float)w/2.0f, (float)h/2.0f);
-    glViewportIndexedf(2, 0.0f, (float)h/2.0f, (float)w/2.0f, (float)h/2.0f);
-    glViewportIndexedf(3, (float)w/2.0f, (float)h/2.0f, (float)w/2.0f, (float)h/2.0f);
+    static const float x_scale = 20.0f / (float)num_blend_funcs;
+    static const float y_scale = 16.0f / (float)num_blend_funcs;
+    float t = (float)SDL_GetTicks() * 0.0001f;
 
     myShader->use();
     glBindVertexArray(VAO);
 
+    glm::mat4 proj_matrix = glm::perspective(45.0f, (float)w / (float)h, 0.1f, 1000.0f);
     glUniformMatrix4fv(glGetUniformLocation(myShader->programID, "proj_matrix"), 1, GL_FALSE, glm::value_ptr(proj_matrix));
-    glUniformMatrix4fv(glGetUniformLocation(myShader->programID, "mv_matrix"), 1, GL_FALSE, glm::value_ptr(mv_matrix));
-    
-    glPatchParameteri(GL_PATCH_VERTICES, 16);
 
-    if(lineMode)
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    else
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    glDrawArrays(GL_PATCHES, 0, 16);
+    glEnable(GL_BLEND);
+    glBlendColor(0.2f, 0.5f, 0.7f, 0.5f);
+    for(int j = 0; j < num_blend_funcs; j++)
+    {
+        for(int i = 0; i < num_blend_funcs; i++)
+        {
+            glm::mat4 mv_matrix = glm::mat4(1.0f);
+            mv_matrix = glm::translate(mv_matrix, glm::vec3(
+                9.5f - x_scale * (float)i,
+                7.5f - y_scale * (float)j,
+                -18.0f
+            ));
+            mv_matrix = glm::rotate(mv_matrix, t*-45.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+            mv_matrix = glm::rotate(mv_matrix, t*-21.0f, glm::vec3(1.0f, 0.0f, 0.0f));
+            glUniformMatrix4fv(glGetUniformLocation(myShader->programID, "mv_matrix"), 1, GL_FALSE, glm::value_ptr(mv_matrix));
+            glBlendFunc(blend_func[i], blend_func[j]);
+            glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, 0);
+        }
+    }
 
+    glDisable(GL_BLEND);
     glBindVertexArray(0);
     myShader->disuse();
 
@@ -86,27 +81,55 @@ int main(int argc, char *argv[])
     initAll();
 
     myShader = new Shader();
-    myShader->add("./shaders/bezier.vert", GL_VERTEX_SHADER);
-    myShader->add("./shaders/bezier.tesc", GL_TESS_CONTROL_SHADER);
-    myShader->add("./shaders/bezier.tese", GL_TESS_EVALUATION_SHADER);
-    myShader->add("./shaders/simple.geom", GL_GEOMETRY_SHADER);
-    myShader->add("./shaders/bezier.frag", GL_FRAGMENT_SHADER);
+    myShader->add("./shaders/simple.vert", GL_VERTEX_SHADER);
+    myShader->add("./shaders/simple.frag", GL_FRAGMENT_SHADER);
     myShader->compile(false);
 
+    static const GLfloat vertex_positions[] =
+    {
+        -0.25f, -0.25f, -0.25f,
+        -0.25f,  0.25f, -0.25f,
+         0.25f, -0.25f, -0.25f,
+         0.25f,  0.25f, -0.25f,
+         0.25f, -0.25f,  0.25f,
+         0.25f,  0.25f,  0.25f,
+        -0.25f, -0.25f,  0.25f,
+        -0.25f,  0.25f,  0.25f,
+    };
+
+    static const GLushort vertex_indices[] =
+    {
+        0, 1, 2,
+        2, 1, 3,
+        2, 3, 4,
+        4, 3, 5,
+        4, 5, 6,
+        6, 5, 7,
+        6, 7, 0,
+        0, 7, 1,
+        6, 0, 2,
+        2, 4, 6,
+        7, 5, 3,
+        7, 3, 1
+    };
+
     glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
     glBindVertexArray(VAO);
+
+    glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, 3*16*sizeof(GLfloat), NULL, GL_DYNAMIC_COPY);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_positions), vertex_positions, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(GLfloat), NULL);
     glEnableVertexAttribArray(0);
+
+    glGenBuffers(1, &EBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(vertex_indices), vertex_indices, GL_STATIC_DRAW);
+
     glBindVertexArray(0);
 
-
     lineMode = false;
-
     printf("%s\n", glGetString(GL_RENDERER));
-    printf("Press S to switch between line mode and fill mode\n");
 
     Uint32 tNow = SDL_GetTicks();
     Uint32 tPrev = SDL_GetTicks();
