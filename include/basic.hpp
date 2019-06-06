@@ -23,6 +23,13 @@
 
 #define SPF (1000 / 60)
 
+enum tone_state
+{
+    TONE_NAIVE,
+    TONE_EXPOSURE,
+    TONE_ADAPTIVE,
+};
+
 void initAll();
 void timer(Uint32 *now, Uint32 *prev);
 bool pollEvents();

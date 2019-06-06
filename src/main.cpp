@@ -1,62 +1,40 @@
 #include "basic.hpp"
 
-SDL_Window *myWindow = nullptr;
-SDL_GLContext myContext = NULL;
-Shader *myShader = nullptr;
-Shader *fboShader = nullptr;
-GLuint VAO, VBO, FBO;
-GLuint tex_color, tex_depth;
+SDL_Window *myWindow;;
+SDL_GLContext myContext;
+Shader *naiveShader, *exposureShader, *adaptiveShader;
+GLuint VAO, VBO;
+GLuint texture_hdr;
 bool lineMode;
+float exposure;
+
+tone_state myState;
 
 void renderAll()
 {
     int w, h;
-    SDL_GetWindowSize(myWindow, &w, &h);    
-
-    glm::mat4 proj_matrix = glm::perspective(45.0f, (float)w / (float)h, 0.1f, 1000.0f);
-    float tt = (float)SDL_GetTicks() * 0.00002f;
-
-    glm::mat4 mv_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -4.0f));
-    mv_matrix = glm::translate(mv_matrix, glm::vec3(sinf(2.1f*tt)*0.5f,
-                                                    cosf(1.7f*tt)*0.5f,
-                                                    sinf(1.3f*tt)*cosf(1.5f*tt)*2.0f));
-    mv_matrix = glm::rotate(mv_matrix, tt*45.0f, glm::vec3(0.0f, 1.0f, 0.0f));
-    mv_matrix = glm::rotate(mv_matrix, tt*81.0f, glm::vec3(1.0f, 0.0f, 0.0f));
-
-    glBindFramebuffer(GL_FRAMEBUFFER, FBO);
-    glViewport(0, 0, 512, 512);
-    glClearColor(0.0f, 0.8f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
-    fboShader->use();
-    glBindVertexArray(VAO);
-
-    glUniformMatrix4fv(glGetUniformLocation(fboShader->programID, "mv_matrix"), 1, GL_FALSE, glm::value_ptr(mv_matrix));
-    glUniformMatrix4fv(glGetUniformLocation(fboShader->programID, "proj_matrix"), 1, GL_FALSE, glm::value_ptr(proj_matrix));
-
-    glDrawArrays(GL_TRIANGLES, 0, 36);
-
-    glBindVertexArray(0);
-    fboShader->disuse();
-
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
+    SDL_GetWindowSize(myWindow, &w, &h);
     glViewport(0, 0, w, h);
-    glClearColor(0.6f, 0.4f, 0.1f, 1.0f);
+    glClearColor(0.6f, 0.8f, 0.5f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    myShader->use();
     glBindVertexArray(VAO);
-
-    glUniformMatrix4fv(glGetUniformLocation(myShader->programID, "mv_matrix"), 1, GL_FALSE, glm::value_ptr(mv_matrix));
-    glUniformMatrix4fv(glGetUniformLocation(myShader->programID, "proj_matrix"), 1, GL_FALSE, glm::value_ptr(proj_matrix));
-
-    glBindTexture(GL_TEXTURE_2D, tex_color);
-    glDrawArrays(GL_TRIANGLES, 0, 36);
-    glBindTexture(GL_TEXTURE_2D, 0);
-
+    glActiveTexture(GL_TEXTURE0);
+    switch (myState)
+    {
+        case TONE_NAIVE:
+            naiveShader->use();
+            break;
+        case TONE_EXPOSURE:
+            exposureShader->use();
+            glUniform1fv(glGetUniformLocation(exposureShader->programID, "exposure"), 1, &exposure);
+            break;
+        case TONE_ADAPTIVE:
+            adaptiveShader->use();
+            break;
+    }
+    glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
-    myShader->disuse();
 
     SDL_GL_SwapWindow(myWindow);
 }
@@ -65,76 +43,28 @@ int main(int argc, char *argv[])
 {
     initAll();
 
-    myShader = new Shader();
-    myShader->add("./shaders/fbo.vert", GL_VERTEX_SHADER);
-    myShader->add("./shaders/fbo2.frag", GL_FRAGMENT_SHADER);
-    myShader->compile(false);
+    naiveShader = new Shader();
+    naiveShader->add("./shaders/hdr.vert", GL_VERTEX_SHADER);
+    naiveShader->add("./shaders/hdr_naive.frag", GL_FRAGMENT_SHADER);
+    naiveShader->compile(false);
 
-    fboShader = new Shader();
-    fboShader->add("./shaders/fbo.vert", GL_VERTEX_SHADER);
-    fboShader->add("./shaders/fbo1.frag", GL_FRAGMENT_SHADER);
-    fboShader->compile(false);
+    exposureShader = new Shader();
+    exposureShader->add("./shaders/hdr.vert", GL_VERTEX_SHADER);
+    exposureShader->add("./shaders/hdr_exposure.frag", GL_FRAGMENT_SHADER);
+    exposureShader->compile(false);
 
-    glGenFramebuffers(1, &FBO);
-    glBindFramebuffer(GL_FRAMEBUFFER, FBO);
-    // create texture for color buffer
-    glGenTextures(1, &tex_color);
-    glBindTexture(GL_TEXTURE_2D, tex_color);
-    glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA8, 512, 512);
-    // turn off mipmaps
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    // create texture for depth buffer
-    glGenTextures(1, &tex_depth);
-    glBindTexture(GL_TEXTURE_2D, tex_depth);
-    glTexStorage2D(GL_TEXTURE_2D, 1, GL_DEPTH_COMPONENT32F, 512, 512);
-    // attach color and depth textures to fbo
-    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, tex_color, 0);
-    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, tex_depth, 0);
-    // draw into the fbo's first color attachment
-    const static GLenum draw_buffers[] = {GL_COLOR_ATTACHMENT0};
-    glDrawBuffers(1, draw_buffers);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    adaptiveShader = new Shader();
+    adaptiveShader->add("./shaders/hdr.vert", GL_VERTEX_SHADER);
+    adaptiveShader->add("./shaders/hdr_adaptive.frag", GL_FRAGMENT_SHADER);
+    adaptiveShader->compile(false);
 
-    static const GLfloat vertex_data[] =
-    {
-        // Position                  Tex Coord
-        -0.5f, -0.5f,  0.5f,      0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,      0.0f, 0.0f,
-         0.5f, -0.5f, -0.5f,      1.0f, 0.0f,
-         0.5f, -0.5f, -0.5f,      1.0f, 0.0f,
-         0.5f, -0.5f,  0.5f,      1.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,      0.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,      0.0f, 0.0f,
-         0.5f,  0.5f, -0.5f,      1.0f, 0.0f,
-         0.5f, -0.5f,  0.5f,      0.0f, 1.0f,
-         0.5f,  0.5f, -0.5f,      1.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,      1.0f, 1.0f,
-         0.5f, -0.5f,  0.5f,      0.0f, 1.0f,
-         0.5f,  0.5f, -0.5f,      1.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f,      0.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,      1.0f, 1.0f,
-        -0.5f,  0.5f, -0.5f,      0.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f,      0.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,      1.0f, 1.0f,
-        -0.5f,  0.5f, -0.5f,      1.0f, 0.0f,
-        -0.5f, -0.5f, -0.5f,      0.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f,      1.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,      0.0f, 0.0f,
-        -0.5f, -0.5f,  0.5f,      0.0f, 1.0f,
-        -0.5f,  0.5f,  0.5f,      1.0f, 1.0f,
-        -0.5f,  0.5f, -0.5f,      0.0f, 1.0f,
-         0.5f,  0.5f, -0.5f,      1.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,      1.0f, 0.0f,
-         0.5f, -0.5f, -0.5f,      1.0f, 0.0f,
-        -0.5f, -0.5f, -0.5f,      0.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f,      0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,      0.0f, 0.0f,
-         0.5f, -0.5f,  0.5f,      1.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,      1.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,      1.0f, 1.0f,
-        -0.5f,  0.5f,  0.5f,      0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,      0.0f, 0.0f,
+    static const GLfloat positions[] = {
+        -0.9f, -0.9f,
+         0.9f, -0.9f,
+         0.9f,  0.9f,
+        -0.9f, -0.9f,
+         0.9f,  0.9f,
+        -0.9f,  0.9f,
     };
 
     glGenVertexArrays(1, &VAO);
@@ -142,13 +72,17 @@ int main(int argc, char *argv[])
 
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_data), vertex_data, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5*sizeof(GLfloat), (GLvoid*)NULL);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5*sizeof(GLfloat), (GLvoid*)(3*sizeof(GLfloat)));
+    glBufferData(GL_ARRAY_BUFFER, sizeof(positions), positions, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2*sizeof(GLfloat), NULL);
     glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
 
     glBindVertexArray(0);
+
+    texture_hdr = loadTexture("./images/sebastian-pichler-20070-unsplash.jpg");
+    glBindTextureUnit(0, texture_hdr);
+
+    myState = TONE_NAIVE;
+    exposure = 1.0f;
 
     lineMode = false;
     printf("%s\n", glGetString(GL_RENDERER));
