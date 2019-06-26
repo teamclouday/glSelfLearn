@@ -5,7 +5,7 @@ SDL_GLContext myContext;
 Shader *myShader;
 GLuint VAO, VBO;
 GLuint starTex;
-int num_stars = 10000;
+int num_stars = 5000;
 
 static unsigned seed  = 0x12345678;
 
