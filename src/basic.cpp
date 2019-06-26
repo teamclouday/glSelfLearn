@@ -3,9 +3,6 @@
 extern SDL_Window *myWindow;
 extern SDL_GLContext myContext;
 extern Shader *myShader;
-extern bool lineMode;
-extern tone_state myState;
-extern float exposure;
 
 void initAll()
 {
@@ -39,8 +36,8 @@ void initAll()
     glDepthFunc(GL_LEQUAL);
     glEnable(GL_CULL_FACE);
     glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
-    glEnable(GL_DEBUG_OUTPUT);
-    glDebugMessageCallback(MessageCallback, 0);
+    // glEnable(GL_DEBUG_OUTPUT);
+    // glDebugMessageCallback(MessageCallback, 0);
 }
 
 void timer(Uint32 *now, Uint32 *prev)
@@ -74,24 +71,6 @@ bool pollEvents()
                     SDL_SetWindowFullscreen(myWindow, isFullScreen ? 0 : SDL_WINDOW_FULLSCREEN_DESKTOP);
                     break;
                 }
-                case SDLK_s:
-                    lineMode = !lineMode;
-                    break;
-                case SDLK_1:
-                    myState = TONE_NAIVE;
-                    break;
-                case SDLK_2:
-                    myState = TONE_EXPOSURE;
-                    break;
-                case SDLK_3:
-                    myState = TONE_ADAPTIVE;
-                    break;
-                case SDLK_UP:
-                    exposure += 0.1f;
-                    break;
-                case SDLK_DOWN:
-                    exposure -= 0.1f;
-                    break;
             }
         }
         else if(e.type == SDL_WINDOWEVENT)
