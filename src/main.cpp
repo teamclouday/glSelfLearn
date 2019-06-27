@@ -5,6 +5,48 @@ SDL_GLContext myContext;
 Shader *myShader;
 GLuint VAO, VBO;
 
+bool shot;
+
+void screenShot()
+{
+    int w, h;
+    SDL_GetWindowSize(myWindow, &w, &h);
+    int row_size = ((w*3+3)&~3);
+    int data_size = row_size * h;
+    unsigned char *data = new unsigned char[data_size];
+
+    #pragma pack (push, 1)
+    struct
+    {
+        unsigned char identsize;    // size of ID field
+        unsigned char cmaptype;     // color map type 0 = none
+        unsigned char imagetype;    // image type 2 = rgb
+        short cmapstart;
+        short cmapsize;
+        unsigned char cmapbpp;
+        short xorigin;
+        short yorigin;
+        short width;
+        short height;
+        unsigned char bpp;
+        unsigned char descriptor;
+    } tga_header;
+    #pragma pack (pop)
+
+    glReadPixels(0, 0, w, h, GL_BGR, GL_UNSIGNED_BYTE, data);
+    memset(&tga_header, 0, sizeof(tga_header));
+    tga_header.imagetype = 2;
+    tga_header.width = (short)w;
+    tga_header.height = (short)h;
+    tga_header.bpp = 24;
+    FILE *f_out = fopen("screenshot.tga", "wb");
+    fwrite(&tga_header, sizeof(tga_header), 1, f_out);
+    fwrite(data, data_size, 1, f_out);
+    fclose(f_out);
+
+    delete[] data;
+}
+
 void renderAll()
 {
     int w, h;
@@ -22,6 +64,12 @@ void renderAll()
 
     glBindVertexArray(0);
     myShader->disuse();
+
+    if(shot)
+    {
+        screenShot();
+        shot = false;
+    }
 
     SDL_GL_SwapWindow(myWindow);
 }
@@ -54,6 +102,8 @@ int main(int argc, char *argv[])
     glEnableVertexAttribArray(0);
 
     glBindVertexArray(0);
+
+    shot = false;
 
     printf("%s\n", glGetString(GL_RENDERER));
 
