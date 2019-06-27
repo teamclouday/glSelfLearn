@@ -4,20 +4,6 @@ SDL_Window *myWindow;;
 SDL_GLContext myContext;
 Shader *myShader;
 GLuint VAO, VBO;
-GLuint starTex;
-int num_stars = 5000;
-
-static unsigned seed  = 0x12345678;
-
-static inline float random_float()
-{
-    float result = 0.0f;
-    unsigned tmp;
-    seed *= 16807;
-    tmp = seed ^ (seed >> 4) ^ (seed << 15);
-    *((unsigned *)&result) = (tmp >> 9) | 0x3F800000;
-    return (result - 1.0f);
-}
 
 void renderAll()
 {
@@ -28,23 +14,13 @@ void renderAll()
     glClearDepth(1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    float tc = (float)SDL_GetTicks() * 0.0001f;
-    glm::mat4 proj_matrix = glm::perspective(45.0f, (float)w/(float)h, 0.1f, 1000.0f);
-    tc -= std::floor(tc);
-
     myShader->use();
-
-    glUniform1fv(glGetUniformLocation(myShader->programID, "time"), 1, &tc);
-    glUniformMatrix4fv(glGetUniformLocation(myShader->programID, "proj_mat"), 1, GL_FALSE, glm::value_ptr(proj_matrix));
-
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_ONE, GL_ONE);
     glBindVertexArray(VAO);
-    glEnable(GL_PROGRAM_POINT_SIZE);
-    glDrawArrays(GL_POINTS, 0, num_stars);
-    glBindVertexArray(0);
-    glDisable(GL_BLEND);
 
+    glEnable(GL_PROGRAM_POINT_SIZE);
+    glDrawArrays(GL_POINTS, 0, 4);
+
+    glBindVertexArray(0);
     myShader->disuse();
 
     SDL_GL_SwapWindow(myWindow);
@@ -55,17 +31,16 @@ int main(int argc, char *argv[])
     initAll();
 
     myShader = new Shader();
-    myShader->add("./shaders/star.vert", GL_VERTEX_SHADER);
-    myShader->add("./shaders/star.frag", GL_FRAGMENT_SHADER);
+    myShader->add("./shaders/point.vert", GL_VERTEX_SHADER);
+    myShader->add("./shaders/point.frag", GL_FRAGMENT_SHADER);
     myShader->compile(false);
 
-    starTex = loadTexture("./images/star.jpg");
-    glBindTextureUnit(0, starTex);
-
-    struct star_t
+    const static GLfloat positions[] =
     {
-        GLfloat position[3];
-        GLfloat color[3];
+         0.5f,  0.5f,
+         0.5f, -0.5f,
+        -0.5f, -0.5f,
+        -0.5f,  0.5f,
     };
 
     glGenVertexArrays(1, &VAO);
@@ -73,27 +48,13 @@ int main(int argc, char *argv[])
 
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, num_stars*sizeof(star_t), NULL, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(positions), positions, GL_STATIC_DRAW);
 
-    star_t *star = (star_t*)glMapBufferRange(GL_ARRAY_BUFFER, 0, num_stars*sizeof(star_t), GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
-    for(int i = 0; i < num_stars; i++)
-    {
-        star[i].position[0] = (random_float() * 2.0f - 1.0f) * 100.0f;
-        star[i].position[1] = (random_float() * 2.0f - 1.0f) * 100.0f;
-        star[i].position[2] = random_float();
-        star[i].color[0] = 0.8f + random_float() * 0.2f;
-        star[i].color[1] = 0.8f + random_float() * 0.2f;
-        star[i].color[2] = 0.8f + random_float() * 0.2f;
-    }
-    glUnmapBuffer(GL_ARRAY_BUFFER);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(star_t), (GLvoid*)NULL);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(star_t), (GLvoid*)(3*sizeof(GLfloat)));
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2*sizeof(GLfloat), (GLvoid*)NULL);
     glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
 
     glBindVertexArray(0);
-    
+
     printf("%s\n", glGetString(GL_RENDERER));
 
     Uint32 tNow = SDL_GetTicks();
