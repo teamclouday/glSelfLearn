@@ -4,8 +4,6 @@ extern SDL_Window *myWindow;
 extern SDL_GLContext myContext;
 extern Shader *myShader;
 
-extern bool shot;
-
 void initAll()
 {
     if(SDL_Init(SDL_INIT_VIDEO) < 0)
@@ -71,11 +69,6 @@ bool pollEvents()
                     bool isFullScreen = SDL_GetWindowFlags(myWindow) & SDL_WINDOW_FULLSCREEN_DESKTOP;
                     SDL_SetWindowPosition(myWindow, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
                     SDL_SetWindowFullscreen(myWindow, isFullScreen ? 0 : SDL_WINDOW_FULLSCREEN_DESKTOP);
-                    break;
-                }
-                case SDLK_s:
-                {
-                    shot = true;
                     break;
                 }
             }
