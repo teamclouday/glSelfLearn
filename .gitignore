@@ -4,3 +4,4 @@ run*
 build/
 external/*
 !external/external.zip
+fonts/*

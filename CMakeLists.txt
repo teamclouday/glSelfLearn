@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.10)
-project(glSelfLearn VERSION 1.0.0 LANGUAGES CXX)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.10)
+PROJECT(glSelfLearn VERSION 1.0.0 LANGUAGES CXX)
 
 SET(CMAKE_CXX_STANDARD 11)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O2 -Wall")
@@ -7,7 +7,7 @@ IF(WIN32)
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mconsole")
 ENDIF(WIN32)
 
-add_definitions(-DGLEW_STATIC)
+ADD_DEFINITIONS(-DGLEW_STATIC)
 
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
 SET(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -16,18 +16,18 @@ FILE(GLOB_RECURSE SRC_FILES "${CMAKE_SOURCE_DIR}/src/*.cpp")
 
 IF(WIN32)
 IF(NOT EXISTS "${CMAKE_SOURCE_DIR}/external/glew")
-execute_process (
+EXECUTE_PROCESS(
     COMMAND unzip ${CMAKE_SOURCE_DIR}/external/external.zip -d ${CMAKE_SOURCE_DIR}/external
 )
 ENDIF()
 
 IF(NOT EXISTS "${CMAKE_SOURCE_DIR}/SDL2.dll")
-execute_process (
+EXECUTE_PROCESS(
     COMMAND cp ${CMAKE_SOURCE_DIR}/external/SDL2/bin/SDL2.dll ${CMAKE_SOURCE_DIR}/SDL2.dll
 )
 ENDIF()
 
-include_directories(
+INCLUDE_DIRECTORIES(
     "${CMAKE_SOURCE_DIR}/include/"
     "${CMAKE_SOURCE_DIR}/external/glew/include"
     "${CMAKE_SOURCE_DIR}/external/SDL2/include"
@@ -35,43 +35,52 @@ include_directories(
     "${CMAKE_SOURCE_DIR}/external/SOIL/include"
 )
 
-link_directories(
+LINK_DIRECTORIES(
     "${CMAKE_SOURCE_DIR}/external/glew/lib"
     "${CMAKE_SOURCE_DIR}/external/SDL2/lib"
     "${CMAKE_SOURCE_DIR}/external/SOIL/lib"
 )
 ENDIF(WIN32)
 
-find_package(OpenGL REQUIRED)
-
 IF(UNIX)
-include_directories("${CMAKE_SOURCE_DIR}/include/")
-find_package(GLEW REQUIRED)
-if(GLEW_FOUND)
-    include_directories(${GLEW_INCLUDE_DIRS})
-else()
-    message("glew is not found on this machine")
-endif()
+INCLUDE_DIRECTORIES("${CMAKE_SOURCE_DIR}/include/")
+FIND_PACKAGE(Freetype REQUIRED)
+IF(FREETYPE_FOUND)
+    INCLUDE_DIRECTORIES(${FREETYPE_INCLUDE_DIRS})
+ELSE()
+    MESSAGE(FATAL "freetype is not found on this machine")
+ENDIF()
+FIND_PACKAGE(GLEW REQUIRED)
+IF(GLEW_FOUND)
+    INCLUDE_DIRECTORIES(${GLEW_INCLUDE_DIRS})
+ELSE()
+    MESSAGE("glew is not found on this machine")
+ENDIF()
 FIND_PATH(SDL2_INCLUDE_DIRS SDL.h PATH_SUFFIXES SDL2)
 FIND_LIBRARY(SDL2_LIBRARIES SDL2)
-if(SDL2_INCLUDE_DIR_NOTFOUND)
-    message("SDL2 is not found on this machine")
-else()
-    include_directories(${SDL2_INCLUDE_DIRS})
-endif()
+IF(SDL2_INCLUDE_DIR_NOTFOUND)
+    MESSAGE("SDL2 is not found on this machine")
+ELSE()
+    INCLUDE_DIRECTORIES(${SDL2_INCLUDE_DIRS})
+ENDIF()
 FIND_PATH(SOIL_INCLUDE_DIRS SOIL.h PATH_SUFFIXES SOIL)
 FIND_LIBRARY(SOIL_LIBRARIES SOIL)
-if(SOIL_INCLUDE_DIRS_NOTFOUND)
-    message("SOIL is not found on this machine")
-else()
-    include_directories(${SOIL_INCLUDE_DIRS})
-endif()
+IF(SOIL_INCLUDE_DIRS_NOTFOUND)
+    MESSAGE(FATAL "SOIL is not found on this machine")
+ELSE()
+    INCLUDE_DIRECTORIES(${SOIL_INCLUDE_DIRS})
+ENDIF()
+
+SET(OpenGL_GL_PREFERENCE GLVND)
+
 ENDIF(UNIX)
 
-add_executable(run ${SRC_FILES})
+FIND_PACKAGE(OpenGL REQUIRED)
+
+ADD_EXECUTABLE(run ${SRC_FILES})
 
 IF(WIN32)
-target_link_libraries(run
+TARGET_LINK_LIBRARIES(run
     mingw32
     SDL2main
     SDL2
@@ -82,9 +91,10 @@ target_link_libraries(run
 ENDIF(WIN32)
 
 IF(UNIX)
-target_link_libraries(run
+TARGET_LINK_LIBRARIES(run
     ${GLEW_LIBRARIES}
     ${SDL2_LIBRARIES}
+    ${FREETYPE_LIBRARIES}
     ${SOIL_LIBRARIES}
     ${OPENGL_LIBRARIES}
 )
