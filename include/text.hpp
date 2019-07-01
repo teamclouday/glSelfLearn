@@ -35,7 +35,7 @@ class glText
 public:
     glText(std::string fontpath, int size);
     ~glText();
-    void render(std::string text, GLfloat x, GLfloat y, GLfloat scale, glm::vec3 color);
+    void render(std::string text, GLfloat x, GLfloat y, GLfloat scale, glm::vec3 color, bool blend);
 
 private:
     void global_init(int size);

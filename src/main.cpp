@@ -1,9 +1,29 @@
 #include "basic.hpp"
 
-SDL_Window *myWindow;;
+SDL_Window *myWindow;
 SDL_GLContext myContext;
 Shader *myShader;
 GLuint VAO, VBO;
+GLuint buffer[2];
+glText *myText;
+
+#define NUM_ELEMS 2048
+
+float *input_data = new float[NUM_ELEMS];
+float *output_data = new float[NUM_ELEMS];
+
+static float random_float()
+{
+    static unsigned seed = 0x13371337;
+    
+    float res = 0.0f;
+    unsigned tmp;
+
+    seed *= 16807;
+    tmp = seed ^ (seed >> 4) ^ (seed << 15);
+    *((unsigned*)&res) = (tmp >> 9) | 0x3F800000;
+    return (res - 1.0f);
+}
 
 void renderAll()
 {
@@ -14,9 +34,31 @@ void renderAll()
     glClearDepth(1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 0, buffer[0], 0, sizeof(float) * NUM_ELEMS);
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(float) * NUM_ELEMS, input_data);
+
+    glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 1, buffer[1], 0, sizeof(float) * NUM_ELEMS);
+
     myShader->use();
+    glDispatchCompute(1, 1, 1);
+
+    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+    glFinish();
+
+    glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 0, buffer[1], 0, sizeof(float) * NUM_ELEMS);
+    float *ptr = (float *)glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, sizeof(float) * NUM_ELEMS, GL_MAP_READ_BIT);
+
+    char chs[1024];
+    sprintf(chs, "SUM: %2.2f %2.2f %2.2f %2.2f %2.2f %2.2f %2.2f %2.2f "
+                    "%2.2f %2.2f %2.2f %2.2f %2.2f %2.2f %2.2f %2.2f",
+                    ptr[0], ptr[1], ptr[2], ptr[3], ptr[4], ptr[5], ptr[6], ptr[7],
+                    ptr[8], ptr[9], ptr[10], ptr[11], ptr[12], ptr[13], ptr[14], ptr[15]);
+
+    glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 
     myShader->disuse();
+
+    myText->render(std::string(chs), 10.0f, (float)h-50.0f, 0.4f, glm::vec3(1.0f, 1.0f, 1.0f), true);
 
     SDL_GL_SwapWindow(myWindow);
 }
@@ -26,8 +68,30 @@ int main(int argc, char *argv[])
     initAll();
 
     myShader = new Shader();
-    myShader->add("./shaders/sample.comp", GL_COMPUTE_SHADER);
+    myShader->add("./shaders/sum.comp", GL_COMPUTE_SHADER);
     myShader->compile(false);
+
+    glShaderStorageBlockBinding(myShader->programID, 0, 0);
+    glShaderStorageBlockBinding(myShader->programID, 1, 1);
+
+    myText = new glText("./fonts/roboto/Roboto-Regular.ttf", 48);
+
+    glGenBuffers(2, buffer);
+
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, buffer[0]);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, NUM_ELEMS*sizeof(float), NULL, GL_DYNAMIC_DRAW);
+
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, buffer[1]);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, NUM_ELEMS*sizeof(float), NULL, GL_DYNAMIC_COPY);
+
+    for(int i = 0; i < NUM_ELEMS; i++)
+    {
+        input_data[i] = random_float();
+    }
+
+    myShader->use();
+    glDispatchCompute(1024, 1, 1);
+    myShader->disuse();
 
     printf("%s\n", glGetString(GL_RENDERER));
 
@@ -40,6 +104,9 @@ int main(int argc, char *argv[])
         timer(&tNow, &tPrev);
         renderAll();
     }
+
+    delete []input_data;
+    delete []output_data;
 
     destroyAll();
     return 0;

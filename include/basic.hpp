@@ -16,6 +16,7 @@
 
 #include "shader.hpp"
 #include "myerror.hpp"
+#include "text.hpp"
 
 #define WINDOW_WIDTH  800
 #define WINDOW_HEIGHT 600

@@ -11,6 +11,8 @@
 #define ERROR_SHADER_COMPILE        4
 #define ERROR_SHADER_PROGRAM_LINK   5
 #define ERROR_READ_IMAGE            6
+#define ERROR_INIT_FREETYPE         7
+#define ERROR_LOAD_FONT             8
 
 void GLAPIENTRY
 MessageCallback(GLenum source,

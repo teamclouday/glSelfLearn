@@ -145,11 +145,17 @@ void glText::update()
     this->projection = glm::ortho(0.0f, (float)w, 0.0f, (float)h);
 }
 
-void glText::render(std::string text, GLfloat x, GLfloat y, GLfloat scale, glm::vec3 color)
+void glText::render(std::string text, GLfloat x, GLfloat y, GLfloat scale, glm::vec3 color, bool blend)
 {
+    if(blend)
+    {
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  
+    }
     this->update();
     glUseProgram(this->programID);
     glUniform3f(glGetUniformLocation(this->programID, "textColor"), color.x, color.y, color.z);
+    glUniformMatrix4fv(glGetUniformLocation(this->programID, "projection"), 1, GL_FALSE, glm::value_ptr(this->projection));
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(this->VAO);
 
@@ -165,13 +171,13 @@ void glText::render(std::string text, GLfloat x, GLfloat y, GLfloat scale, glm::
         GLfloat h = ch.size.y * scale;
         
         GLfloat vertices[6][4] = {
-            { xpos,     ypos + h,   0.0, 0.0 },            
-            { xpos,     ypos,       0.0, 1.0 },
-            { xpos + w, ypos,       1.0, 1.0 },
+            {xpos,     ypos + h,   0.0, 0.0},
+            {xpos,     ypos,       0.0, 1.0},
+            {xpos + w, ypos,       1.0, 1.0},
 
-            { xpos,     ypos + h,   0.0, 0.0 },
-            { xpos + w, ypos,       1.0, 1.0 },
-            { xpos + w, ypos + h,   1.0, 0.0 }           
+            {xpos,     ypos + h,   0.0, 0.0},
+            {xpos + w, ypos,       1.0, 1.0},
+            {xpos + w, ypos + h,   1.0, 0.0}
         };
         
         glBindTexture(GL_TEXTURE_2D, ch.textureID);
@@ -188,4 +194,8 @@ void glText::render(std::string text, GLfloat x, GLfloat y, GLfloat scale, glm::
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
     glUseProgram(0);
+    if(blend)
+    {
+        glDisable(GL_BLEND);
+    }
 }

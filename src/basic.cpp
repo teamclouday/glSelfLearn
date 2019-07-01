@@ -3,6 +3,7 @@
 extern SDL_Window *myWindow;
 extern SDL_GLContext myContext;
 extern Shader *myShader;
+extern glText *myText;
 
 void initAll()
 {
@@ -87,6 +88,10 @@ bool pollEvents()
 
 void destroyAll()
 {
+    if(myShader != nullptr)
+        delete myShader;
+    if(myText != nullptr)
+        delete myText;
     SDL_GL_DeleteContext(myContext);
     SDL_DestroyWindow(myWindow);
     SDL_Quit();
