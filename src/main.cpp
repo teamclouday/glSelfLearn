@@ -4,48 +4,84 @@ SDL_Window *myWindow;
 SDL_GLContext myContext;
 glText *myText;
 Shader *myShader;
-Shader *imgShader;
-GLuint VAO, VBO;
-GLuint images[3];
+Shader *renderShader;
+// GLuint VAO, VBO;
+GLuint flock_buffer[2];
+GLuint flock_vao[2];
+GLuint geom_buffer;
 
-#define NUM_ELEMENTS 1024
+#define WORKGROUP_SIZE  256
+#define NUM_WORKGROUPS  16
+#define FLOCK_SIZE      (WORKGROUP_SIZE * NUM_WORKGROUPS)
+
+int frameID = 0;
+
+struct flock_mem
+{
+    glm::vec3 position;
+    unsigned aaa = 32;
+    glm::vec3 velocity;
+    unsigned bbb = 32;
+};
+
+glm::vec3 random_vec3()
+{
+    // between 0 and 1
+    float x = (float)(rand()%100001)/100001.0f;
+    float y = (float)(rand()%100001)/100001.0f;
+    float z = (float)(rand()%100001)/100001.0f;
+    return glm::vec3(x, y, z);
+}
 
 void renderAll()
 {
     int w, h;
     SDL_GetWindowSize(myWindow, &w, &h);
     glViewport(0, 0, w, h);
-    glClearColor(1.0f, 0.6f, 0.4f, 0.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClearDepth(1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    float tt = (float)(SDL_GetTicks()*0.00001f);
+
     myShader->use();
+    // glm::vec3 goal = glm::vec3(sinf(tt*0.34f),
+    //                            cosf(tt*0.29f),
+    //                            sinf(tt*0.12f)*cosf(tt*0.5f));
+    // goal = goal * glm::vec3(35.0f, 25.0f, 60.0f);
 
-    glBindImageTexture(0, images[0], 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
-    glBindImageTexture(1, images[1], 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
+    int x, y;
+    SDL_GetMouseState(&x, &y);
+    glm::vec3 goal = glm::vec3(2*((float)(w-x)/(float)w)-1.0f, 2*((float)(h-y)/(float)h)-1.0f, sinf(tt*0.12f)*cosf(tt*0.5f));
+    // printf("%.2f %.2f\n", (2*((float)x/(float)w)-1.0f), (2*((float)(h-y)/(float)h)-1.0f));
+    goal = goal * glm::vec3(100.0f, 100.0f, 60.0f);
 
-    glDispatchCompute(NUM_ELEMENTS, 1, 1);
+    glUniform3fv(glGetUniformLocation(myShader->programID, "goal"), 1, glm::value_ptr(goal));
 
-    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, flock_buffer[frameID]);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, flock_buffer[frameID^1]);
 
-    glBindImageTexture(0, images[1], 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
-    glBindImageTexture(1, images[2], 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
-
-    glDispatchCompute(NUM_ELEMENTS, 1, 1);
-
-    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+    glDispatchCompute(NUM_WORKGROUPS, 1, 1);
 
     myShader->disuse();
 
-    imgShader->use();
+    renderShader->use();
 
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, images[2]);
+    glm::mat4 mv_matrix = glm::lookAt(glm::vec3(0.0f, 0.0f, -400.0f),
+                                      glm::vec3(0.0f, 0.0f, 0.0f),
+                                      glm::vec3(0.0f, 1.0f, 0.0f));
+    glm::mat4 proj_matrix = glm::perspective(45.0f, (float)w/(float)h, 0.1f, 3000.0f);
+    glm::mat4 mvp = proj_matrix * mv_matrix;
 
-    glBindVertexArray(VAO);
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    glUniformMatrix4fv(glGetUniformLocation(renderShader->programID, "mvp"), 1, GL_FALSE, glm::value_ptr(mvp));
+
+    glBindVertexArray(flock_vao[frameID]);
+    glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 8, FLOCK_SIZE);
     glBindVertexArray(0);
 
-    imgShader->disuse();
+    renderShader->disuse();
+
+    frameID ^= 1;
 
     SDL_GL_SwapWindow(myWindow);
 }
@@ -54,26 +90,78 @@ int main(int argc, char *argv[])
 {
     initAll();
 
-    myShader = new Shader();
-    myShader->add("./shaders/sum2d.comp", GL_COMPUTE_SHADER);
-    myShader->compile(false);
-
-    imgShader = new Shader();
-    imgShader->add("./shaders/image.vert", GL_VERTEX_SHADER);
-    imgShader->add("./shaders/image.frag", GL_FRAGMENT_SHADER);
-    imgShader->compile(false);
-
     myText = new glText("./fonts/roboto/Roboto-Regular.ttf", 48);
 
-    glGenVertexArrays(1, &VAO);
+    myShader = new Shader();
+    myShader->add("./shaders/flock.comp", GL_COMPUTE_SHADER);
+    myShader->compile(false);
 
-    images[0] = loadTexture("./images/sebastian-pichler-20070-unsplash.jpg");
-    glGenTextures(2, &(images[1]));
-    glBindTexture(GL_TEXTURE_2D, images[1]);
-    glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32F, NUM_ELEMENTS, NUM_ELEMENTS);
-    glBindTexture(GL_TEXTURE_2D, images[2]);
-    glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32F, NUM_ELEMENTS, NUM_ELEMENTS);
-    glBindTexture(GL_TEXTURE_2D, 0);
+    renderShader = new Shader();
+    renderShader->add("./shaders/flock.vert", GL_VERTEX_SHADER);
+    renderShader->add("./shaders/flock.frag", GL_FRAGMENT_SHADER);
+    renderShader->compile(false);
+
+    static const GLfloat geometry[] = {
+        // positions
+        -5.0f, 1.0f, 0.0f,
+        -1.0f, 1.5f, 0.0f,
+        -1.0f, 1.5f, 7.0f,
+         0.0f, 0.0f, 0.0f,
+         0.0f, 0.0f, 10.0f,
+         1.0f, 1.5f, 0.0f,
+         1.0f, 1.5f, 7.0f,
+         5.0f, 1.0f, 0.0f,
+        // normals
+        0.0f, 0.0f, 0.0f,
+        0.0f, 0.0f, 0.0f,
+        0.107f, -0.859f, 0.0f,
+        0.832f, 0.554f, 0.0f,
+        -0.59f, -0.395f, 0.0f,
+        -0.832f, 0.554f, 0.0f,
+        0.295f, -0.196f, 0.0f,
+        0.124f, 0.992f, 0.0f,
+    };
+
+    glGenBuffers(2, flock_buffer);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, flock_buffer[0]);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, FLOCK_SIZE*sizeof(flock_mem), NULL, GL_DYNAMIC_COPY);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, flock_buffer[1]);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, FLOCK_SIZE*sizeof(flock_mem), NULL, GL_DYNAMIC_COPY);
+
+    glGenBuffers(1, &geom_buffer);
+    glBindBuffer(GL_ARRAY_BUFFER, geom_buffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(geometry), geometry, GL_STATIC_DRAW);
+    
+    glGenVertexArrays(2, flock_vao);
+
+    for(int i = 0; i < 2; i++)
+    {
+        glBindVertexArray(flock_vao[i]);
+        glBindBuffer(GL_ARRAY_BUFFER, geom_buffer);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (GLvoid*)(8*sizeof(glm::vec3)));
+        glBindBuffer(GL_ARRAY_BUFFER, flock_buffer[i]);
+        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(flock_mem), NULL);
+        glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(flock_mem), (GLvoid*)(sizeof(glm::vec4)));
+
+        glVertexAttribDivisor(2, 1);
+        glVertexAttribDivisor(3, 1);
+
+        glEnableVertexAttribArray(0);
+        glEnableVertexAttribArray(1);
+        glEnableVertexAttribArray(2);
+        glEnableVertexAttribArray(3);
+    }
+
+    glBindBuffer(GL_ARRAY_BUFFER, flock_buffer[0]);
+    flock_mem *ptr  = reinterpret_cast<flock_mem*>(glMapBufferRange(GL_ARRAY_BUFFER, 0, 
+            FLOCK_SIZE*sizeof(flock_mem), GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT));
+    for(int i = 0; i < FLOCK_SIZE; i++)
+    {
+        ptr[i].position = (random_vec3() - glm::vec3(0.5f)) * 300.0f;
+        ptr[i].velocity = (random_vec3() - glm::vec3(0.5f));
+    }
+    glUnmapBuffer(GL_ARRAY_BUFFER);
 
     printf("%s\n", glGetString(GL_RENDERER));
 
