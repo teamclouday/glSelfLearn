@@ -4,16 +4,10 @@ SDL_Window *myWindow;
 SDL_GLContext myContext;
 glText *myText;
 Shader *myShader;
-Shader *drawShader;
-
 GLuint VAO;
-GLuint input_tex, output_tex;
-GLuint output_buff, output_buff_tex;
+GLuint tex;
 
 int display_mode;
-
-#define TEXTURE_WIDTH   256
-#define TEXTURE_HEIGHT  256
 
 void renderAll()
 {
@@ -24,42 +18,23 @@ void renderAll()
     glClearDepth(1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, input_tex);
-    glBindImageTexture(0, output_buff_tex, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG32UI);
-
     myShader->use();
 
-    // glUniform1ui(glGetUniformLocation(myShader->programID, "uImageWidth"), TEXTURE_WIDTH);
+    glBindTexture(GL_TEXTURE_2D, tex);
+    glActiveTexture(GL_TEXTURE0);
 
-    glDispatchCompute(TEXTURE_WIDTH / 4, TEXTURE_WIDTH / 4, 1);
-    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+    glUniform1iv(glGetUniformLocation(myShader->programID, "mode"), 1, &display_mode);
 
-    // unsigned char *ptr = (unsigned char*)glMapBufferRange(GL_TEXTURE_BUFFER, 0, TEXTURE_WIDTH * TEXTURE_HEIGHT / 2, GL_MAP_READ_BIT);
-    // glUnmapBuffer(GL_TEXTURE_BUFFER);
-
-    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, output_buff);
-    glBindTexture(GL_TEXTURE_2D, output_tex);
-    glCompressedTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,
-                              TEXTURE_WIDTH, TEXTURE_HEIGHT, GL_COMPRESSED_RED_RGTC1, TEXTURE_WIDTH*TEXTURE_HEIGHT/2, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    myShader->disuse();
-
-    switch(display_mode)
-    {
-        case 1:
-            glBindTexture(GL_TEXTURE_2D, input_tex);
-            break;
-        case 2:
-            glBindTexture(GL_TEXTURE_2D, output_tex);
-            break;
-    }
-    drawShader->use();
     glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     glBindVertexArray(0);
-    drawShader->disuse();
+
+    myShader->disuse();
+
+    if(display_mode)
+        myText->render("Linear Filter", 10.0f, 10.0f, 0.6f, glm::vec3(1.0f, 1.0f, 1.0f), true);
+    else
+        myText->render("HQ Filter", 10.0f, 10.0f, 0.6f, glm::vec3(1.0f, 1.0f, 1.0f), true);
 
     SDL_GL_SwapWindow(myWindow);
 }
@@ -71,32 +46,14 @@ int main(int argc, char *argv[])
     myText = new glText("./fonts/roboto/Roboto-Regular.ttf", 48);
 
     myShader = new Shader();
-    myShader->add("./shaders/rgtc.comp", GL_COMPUTE_SHADER);
+    myShader->add("./shaders/filter.vert", GL_VERTEX_SHADER);
+    myShader->add("./shaders/filter.frag", GL_FRAGMENT_SHADER);
     myShader->compile(false);
-
-    drawShader = new Shader();
-    drawShader->add("./shaders/draw.vert", GL_VERTEX_SHADER);
-    drawShader->add("./shaders/draw.frag", GL_FRAGMENT_SHADER);
-    drawShader->compile(false);
-
-    input_tex = loadTexture("./images/colors.png");
-
-    glGenTextures(1, &output_tex);
-    glBindTexture(GL_TEXTURE_2D, output_tex);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexStorage2D(GL_TEXTURE_2D, 1, GL_COMPRESSED_RED_RGTC1, TEXTURE_WIDTH, TEXTURE_HEIGHT);
-
-    glGenBuffers(1, &output_buff);
-    glBindBuffer(GL_TEXTURE_BUFFER, output_buff);
-    glBufferStorage(GL_TEXTURE_BUFFER, TEXTURE_WIDTH * TEXTURE_HEIGHT / 2, NULL, GL_MAP_READ_BIT);
-
-    glGenTextures(1, &output_buff_tex);
-    glBindTexture(GL_TEXTURE_BUFFER, output_buff_tex);
-    glTexBuffer(GL_TEXTURE_BUFFER, GL_RG32UI, output_buff);
 
     glGenVertexArrays(1, &VAO);
 
+    tex = loadTexture("./images/colors.png");
+    
     display_mode = 1;
     
     printf("%s\n", glGetString(GL_RENDERER));

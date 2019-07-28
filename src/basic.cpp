@@ -73,12 +73,8 @@ bool pollEvents()
                     SDL_SetWindowFullscreen(myWindow, isFullScreen ? 0 : SDL_WINDOW_FULLSCREEN_DESKTOP);
                     break;
                 }
-                case SDLK_1:
-                    display_mode = 1;
-                    break;
-                case SDLK_2:
-                    display_mode = 2;
-                    break;
+                case SDLK_s:
+                    display_mode ^= 1;
             }
         }
         else if(e.type == SDL_WINDOWEVENT)
