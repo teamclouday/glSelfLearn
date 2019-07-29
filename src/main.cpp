@@ -4,6 +4,7 @@ SDL_Window *myWindow;
 SDL_GLContext myContext;
 glText *myText;
 Shader *myShader;
+Model *myModel;
 GLuint VAO;
 GLuint tex;
 
@@ -50,6 +51,8 @@ int main(int argc, char *argv[])
     myShader->add("./shaders/filter.frag", GL_FRAGMENT_SHADER);
     myShader->compile(false);
 
+    myModel = new Model("./models/cooper_house");
+
     glGenVertexArrays(1, &VAO);
 
     tex = loadTexture("./images/colors.png");
@@ -70,51 +73,4 @@ int main(int argc, char *argv[])
 
     destroyAll();
     return 0;
-}
-
-
-GLuint loadTextureArray(std::vector<std::string> path)
-{
-    std::vector<unsigned char *> data;
-    int width, height;
-    for(unsigned i = 0; i < path.size(); i++)
-    {
-        unsigned char *image = SOIL_load_image(path[i].c_str(), &width, &height, 0, SOIL_LOAD_RGB);
-        data.push_back(image);
-    }
-    GLuint texture;
-    glCreateTextures(GL_TEXTURE_2D_ARRAY, 1, &texture);
-    glTextureStorage3D(texture, 8, GL_RGB8, 256, 256, data.size());
-    for(unsigned i = 0; i < data.size(); i++)
-    {
-        glTextureSubImage3D(texture, 0, 0, 0, i, 256, 256, 1, GL_RGB, GL_UNSIGNED_BYTE, data[i]);
-    }
-    for(unsigned i = 0; i < data.size(); i++)
-        SOIL_free_image_data(data[i]);
-    return texture;
-}
-
-GLuint loadTexture(std::string path)
-{
-    GLuint texture;
-    int width, height;
-    unsigned char *data = SOIL_load_image(path.c_str(), &width, &height, 0, SOIL_LOAD_RGBA);
-    if(!data)
-    {
-        printf("Failed to load image: %s\n", path.c_str());
-        exit(ERROR_READ_IMAGE);
-    }
-    glCreateTextures(GL_TEXTURE_2D, 1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glTexStorage2D(GL_TEXTURE_2D, 4, GL_RGBA8, width, height);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data);
-    // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-    glGenerateTextureMipmap(texture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    SOIL_free_image_data(data);
-    return texture;
 }

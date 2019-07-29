@@ -17,6 +17,7 @@
 #include "shader.hpp"
 #include "myerror.hpp"
 #include "text.hpp"
+#include "model.hpp"
 
 #define WINDOW_WIDTH  800
 #define WINDOW_HEIGHT 600
@@ -29,5 +30,3 @@ void timer(Uint32 *now, Uint32 *prev);
 bool pollEvents();
 void destroyAll();
 void renderAll();
-GLuint loadTexture(std::string path);
-GLuint loadTextureArray(std::vector<std::string> path);

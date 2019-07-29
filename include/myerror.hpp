@@ -13,6 +13,9 @@
 #define ERROR_READ_IMAGE            6
 #define ERROR_INIT_FREETYPE         7
 #define ERROR_LOAD_FONT             8
+#define ERROR_LOAD_MODEL            9
+#define ERROR_LOAD_TEX_MAT          10
+#define ERROR_PATH                  11
 
 void GLAPIENTRY
 MessageCallback(GLenum source,
