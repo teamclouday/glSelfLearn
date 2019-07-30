@@ -47,6 +47,9 @@ void renderAll(float deltaT)
         case 2:
             myText->render("Phong Shading (pixel based)", 10.0f, 10.0f, 0.6f, glm::vec3(1.0f, 1.0f, 1.0f), true);
             break;
+        case 3:
+            myText->render("Blinn-Phong Lighting (optimized Phong)", 10.0f, 10.0f, 0.6f, glm::vec3(1.0f, 1.0f, 1.0f), true);
+            break;
     }
 
     SDL_GL_SwapWindow(myWindow);
@@ -71,6 +74,11 @@ int main(int argc, char *argv[])
     myShaders[1]->add("./shaders/phong.vert", GL_VERTEX_SHADER);
     myShaders[1]->add("./shaders/phong.frag", GL_FRAGMENT_SHADER);
     myShaders[1]->compile(false);
+    // [3] Blinn-Phong Lighting
+    myShaders[2] = new Shader();
+    myShaders[2]->add("./shaders/phong.vert", GL_VERTEX_SHADER);
+    myShaders[2]->add("./shaders/phongblinn.frag", GL_FRAGMENT_SHADER);
+    myShaders[2]->compile(false);
     
     display_mode = 1;
 
