@@ -50,6 +50,9 @@ void renderAll(float deltaT, float fps)
         case 3:
             myText->render("Blinn-Phong Lighting (optimized Phong)", 10.0f, 10.0f, 0.6f, glm::vec3(1.0f, 1.0f, 1.0f), true);
             break;
+        case 4:
+            myText->render("Phong + Rim Lighting", 10.0f, 10.0f, 0.6f, glm::vec3(1.0f, 1.0f, 1.0f), true);
+            break;
     }
 
     static char fpsStr[10];
@@ -83,6 +86,11 @@ int main(int argc, char *argv[])
     myShaders[2]->add("./shaders/phong.vert", GL_VERTEX_SHADER);
     myShaders[2]->add("./shaders/phongblinn.frag", GL_FRAGMENT_SHADER);
     myShaders[2]->compile(false);
+    // [4] Phong + Rim Lighting
+    myShaders[3] = new Shader();
+    myShaders[3]->add("./shaders/phong.vert", GL_VERTEX_SHADER);
+    myShaders[3]->add("./shaders/phongrim.frag", GL_FRAGMENT_SHADER);
+    myShaders[3]->compile(false);
     
     display_mode = 1;
 
