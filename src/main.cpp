@@ -7,8 +7,9 @@ Shader *myShader;
 Model *myModel;
 Camera *myCamera;
 
-std::vector<Shader*> myShaders(4, nullptr);
+std::vector<Shader*> myShaders(6, nullptr);
 int display_mode;
+GLuint texSphe, texRect;
 
 void renderAll(float deltaT, float fps)
 {
@@ -31,6 +32,11 @@ void renderAll(float deltaT, float fps)
     Shader *thisShader = myShaders[display_mode-1];
     thisShader->use();
 
+    if(display_mode == 5)
+        glBindTexture(GL_TEXTURE_2D, texSphe);
+    else if(display_mode == 6)
+        glBindTexture(GL_TEXTURE_2D, texRect);
+
     glUniformMatrix4fv(glGetUniformLocation(thisShader->programID, "mv_mat"), 1, GL_FALSE, glm::value_ptr(mv_mat));
     glUniformMatrix4fv(glGetUniformLocation(thisShader->programID, "view_mat"), 1, GL_FALSE, glm::value_ptr(view_mat));
     glUniformMatrix4fv(glGetUniformLocation(thisShader->programID, "proj_mat"), 1, GL_FALSE, glm::value_ptr(proj_mat));
@@ -52,6 +58,12 @@ void renderAll(float deltaT, float fps)
             break;
         case 4:
             myText->render("Phong + Rim Lighting", 10.0f, 10.0f, 0.6f, glm::vec3(1.0f, 1.0f, 1.0f), true);
+            break;
+        case 5:
+            myText->render("Spherical Environment Mapping", 10.0f, 10.0f, 0.6f, glm::vec3(1.0f, 1.0f, 1.0f), true);
+            break;
+        case 6:
+            myText->render("Equirectangular Environment Mapping", 10.0f, 10.0f, 0.6f, glm::vec3(1.0f, 1.0f, 1.0f), true);
             break;
     }
 
@@ -91,6 +103,21 @@ int main(int argc, char *argv[])
     myShaders[3]->add("./shaders/phong.vert", GL_VERTEX_SHADER);
     myShaders[3]->add("./shaders/phongrim.frag", GL_FRAGMENT_SHADER);
     myShaders[3]->compile(false);
+    // [5] Spherical Env Mapping
+    myShaders[4] = new Shader();
+    myShaders[4]->add("./shaders/env.vert", GL_VERTEX_SHADER);
+    myShaders[4]->add("./shaders/envsphe.frag", GL_FRAGMENT_SHADER);
+    myShaders[4]->compile(false);
+    // [6] Equirectangular Env Mapping
+    myShaders[5] = new Shader();
+    myShaders[5]->add("./shaders/env.vert", GL_VERTEX_SHADER);
+    myShaders[5]->add("./shaders/envrect.frag", GL_FRAGMENT_SHADER);
+    myShaders[5]->compile(false);
+
+    texSphe = loadTexture("./images/envmap1.jpeg");
+    glBindTextureUnit(0, texSphe);
+    texRect = loadTexture("./images/envmap4.jpg");
+    glBindTextureUnit(0, texRect);
     
     display_mode = 1;
 
