@@ -4,7 +4,8 @@ extern SDL_Window *myWindow;
 extern SDL_GLContext myContext;
 extern Shader *myShader;
 extern glText *myText;
-extern int display_mode;
+extern Model *myModel;
+extern Camera *myCamera;
 
 void initAll()
 {
@@ -65,7 +66,17 @@ bool pollEvents()
             switch(e.key.keysym.sym)
             {
                 case SDLK_ESCAPE:
-                    return true;
+                {
+                    if(!myCamera->focus)
+                        return true;
+                    else
+                    {
+                        myCamera->focus = false;
+                        SDL_ShowCursor(SDL_TRUE);
+                        SDL_CaptureMouse(SDL_FALSE);
+                    }
+                    break;
+                }
                 case SDLK_F11:
                 {
                     bool isFullScreen = SDL_GetWindowFlags(myWindow) & SDL_WINDOW_FULLSCREEN_DESKTOP;
@@ -73,8 +84,46 @@ bool pollEvents()
                     SDL_SetWindowFullscreen(myWindow, isFullScreen ? 0 : SDL_WINDOW_FULLSCREEN_DESKTOP);
                     break;
                 }
+                case SDLK_r:
+                {
+                    if(myCamera->focus)
+                        myCamera->reset();
+                    break;
+                }
+                case SDLK_w:
+                    if(myCamera->focus)
+                        myCamera->keyMap[0] = true;
+                    break;
+                case SDLK_a:
+                    if(myCamera->focus)
+                        myCamera->keyMap[1] = true;
+                    break;
                 case SDLK_s:
-                    display_mode ^= 1;
+                    if(myCamera->focus)
+                        myCamera->keyMap[2] = true;
+                    break;
+                case SDLK_d:
+                    if(myCamera->focus)
+                        myCamera->keyMap[3] = true;
+                    break;
+            }
+        }
+        else if(e.type == SDL_KEYUP)
+        {
+            switch(e.key.keysym.sym)
+            {
+                case SDLK_w:
+                    myCamera->keyMap[0] = false;
+                    break;
+                case SDLK_a:
+                    myCamera->keyMap[1] = false;
+                    break;
+                case SDLK_s:
+                    myCamera->keyMap[2] = false;
+                    break;
+                case SDLK_d:
+                    myCamera->keyMap[3] = false;
+                    break;
             }
         }
         else if(e.type == SDL_WINDOWEVENT)
@@ -83,6 +132,19 @@ bool pollEvents()
             {
                 case SDL_WINDOWEVENT_SIZE_CHANGED:
                     glViewport(0, 0, e.window.data1, e.window.data2);
+            }
+        }
+        else if(e.type == SDL_MOUSEBUTTONDOWN)
+        {
+            if(!myCamera->focus)
+            {
+                SDL_ShowCursor(SDL_FALSE);
+                myCamera->focus = true;
+                int w, h;
+                SDL_GetWindowSize(myWindow, &w, &h);
+                myCamera->mousePos = {(int)(w/2), (int)(h/2)};
+                SDL_WarpMouseInWindow(myWindow, myCamera->mousePos[0], myCamera->mousePos[1]);
+                SDL_CaptureMouse(SDL_TRUE);
             }
         }
     }
@@ -95,6 +157,10 @@ void destroyAll()
         delete myShader;
     if(myText != nullptr)
         delete myText;
+    if(myModel != nullptr)
+        delete myModel;
+    if(myCamera != nullptr)
+        delete myCamera;
     SDL_GL_DeleteContext(myContext);
     SDL_DestroyWindow(myWindow);
     SDL_Quit();

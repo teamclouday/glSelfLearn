@@ -5,12 +5,9 @@ SDL_GLContext myContext;
 glText *myText;
 Shader *myShader;
 Model *myModel;
-GLuint VAO;
-GLuint tex;
+Camera *myCamera;
 
-int display_mode;
-
-void renderAll()
+void renderAll(Uint32 deltaT)
 {
     int w, h;
     SDL_GetWindowSize(myWindow, &w, &h);
@@ -19,23 +16,7 @@ void renderAll()
     glClearDepth(1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    myShader->use();
-
-    glBindTexture(GL_TEXTURE_2D, tex);
-    glActiveTexture(GL_TEXTURE0);
-
-    glUniform1iv(glGetUniformLocation(myShader->programID, "mode"), 1, &display_mode);
-
-    glBindVertexArray(VAO);
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-    glBindVertexArray(0);
-
-    myShader->disuse();
-
-    if(display_mode)
-        myText->render("Linear Filter", 10.0f, 10.0f, 0.6f, glm::vec3(1.0f, 1.0f, 1.0f), true);
-    else
-        myText->render("HQ Filter", 10.0f, 10.0f, 0.6f, glm::vec3(1.0f, 1.0f, 1.0f), true);
+    myCamera->update((float)deltaT);
 
     SDL_GL_SwapWindow(myWindow);
 }
@@ -53,11 +34,7 @@ int main(int argc, char *argv[])
 
     myModel = new Model("./models/cooper_house");
 
-    glGenVertexArrays(1, &VAO);
-
-    tex = loadTexture("./images/colors.png");
-    
-    display_mode = 1;
+    myCamera = new Camera(glm::vec3(0.0f, 0.0f, 10.0f));
     
     printf("%s\n", glGetString(GL_RENDERER));
 
@@ -68,7 +45,7 @@ int main(int argc, char *argv[])
     {
         quit = pollEvents();
         timer(&tNow, &tPrev);
-        renderAll();
+        renderAll(tNow - tPrev);
     }
 
     destroyAll();

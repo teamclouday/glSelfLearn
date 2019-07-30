@@ -18,6 +18,7 @@
 #include "myerror.hpp"
 #include "text.hpp"
 #include "model.hpp"
+#include "camera.hpp"
 
 #define WINDOW_WIDTH  800
 #define WINDOW_HEIGHT 600
@@ -29,4 +30,4 @@ void initAll();
 void timer(Uint32 *now, Uint32 *prev);
 bool pollEvents();
 void destroyAll();
-void renderAll();
+void renderAll(Uint32 deltaT);
