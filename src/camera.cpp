@@ -5,8 +5,8 @@ extern SDL_Window *myWindow;
 Camera::Camera(glm::vec3 position, glm::vec3 up,
                GLfloat yaw, GLfloat pitch)
     : MovementSpeed(SPEED), MouseSenditivity(SENSITIVITY),
-      Zoom(ZOOM), Front(glm::vec3(0.0f, 0.0f, -1.0f)), focus(false),
-      keyMap(4, false), mousePos(2, 0)
+      Front(glm::vec3(0.0f, 0.0f, -1.0f)), focus(false),
+      mv_zoom(1.0f), keyMap(6, false), mousePos(2, 0)
 {
     this->Position = position;
     this->WorldUp = up;
@@ -19,8 +19,8 @@ Camera::Camera(GLfloat posX, GLfloat posY, GLfloat posZ,
                GLfloat upX, GLfloat upY, GLfloat upZ,
                GLfloat yaw, GLfloat pitch)
     : MovementSpeed(SPEED), MouseSenditivity(SENSITIVITY),
-      Zoom(ZOOM), Front(glm::vec3(0.0f, 0.0f, -1.0f)), focus(false),
-      keyMap(4, false), mousePos(2, 0)
+      Front(glm::vec3(0.0f, 0.0f, -1.0f)), focus(false),
+      mv_zoom(1.0f), keyMap(6, false), mousePos(2, 0)
 {
     this->Position = glm::vec3(posX, posY, posZ);
     this->WorldUp  = glm::vec3(upX, upY, upZ);
@@ -36,6 +36,8 @@ glm::mat4 Camera::GetViewMatrix()
 
 void Camera::update(GLfloat deltaT)
 {
+    if(!this->focus)
+        return;
     if(this->keyMap[0])
         this->ProcessKeyboard(FORWARD, deltaT);
     if(this->keyMap[1])
@@ -44,6 +46,12 @@ void Camera::update(GLfloat deltaT)
         this->ProcessKeyboard(BACKWARD, deltaT);
     if(this->keyMap[3])
         this->ProcessKeyboard(RIGHT, deltaT);
+    if(this->keyMap[4])
+        this->mv_zoom -= 0.005f;
+    if(this->keyMap[5])
+        this->mv_zoom += 0.005f;
+    this->mv_zoom = mv_zoom > 0.0f ? mv_zoom : 0.001f;
+    this->mv_zoom = mv_zoom < 5.0f ? mv_zoom : 5.0f;
     int x, y;
     SDL_GetMouseState(&x, &y);
     float xoffset = (float)(x - this->mousePos[0]);
@@ -93,23 +101,12 @@ void Camera::ProcessMouseMovement(GLfloat xoffset, GLfloat yoffset, GLboolean co
     this->updateCameraVectors();
 }
 
-void Camera::ProcessMouseScroll(GLfloat yoffset)
-{
-    if(this->Zoom >= 1.0f && this->Zoom <= 45.0f)
-        this->Zoom -= yoffset;
-    if(this->Zoom <= 1.0f)
-        this->Zoom = 1.0f;
-    if(this->Zoom >= 45.0f)
-        this->Zoom = 45.0f;
-}
-
 void Camera::reset()
 {
     this->Position = glm::vec3(0.0f, 1.0f, 5.0f);
     this->WorldUp = glm::vec3(0.0f, 1.0f, 0.0f);
     this->Yaw = YAW;
     this->Pitch = PITCH;
-    this->Zoom = ZOOM;
     this->MovementSpeed = SPEED;
     this->MouseSenditivity = SENSITIVITY;
     this->updateCameraVectors();

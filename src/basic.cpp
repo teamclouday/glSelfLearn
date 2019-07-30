@@ -7,6 +7,9 @@ extern glText *myText;
 extern Model *myModel;
 extern Camera *myCamera;
 
+extern int display_mode;
+extern std::vector<Shader*> myShaders;
+
 void initAll()
 {
     if(SDL_Init(SDL_INIT_VIDEO) < 0)
@@ -43,13 +46,14 @@ void initAll()
     // glDebugMessageCallback(MessageCallback, 0);
 }
 
-void timer(Uint32 *now, Uint32 *prev)
+float timer(Uint32 *now, Uint32 *prev)
 {
     *now = SDL_GetTicks();
     Uint32 delta = *now - *prev;
     if(delta < SPF)
         SDL_Delay((Uint32)SPF - delta);
     *prev = SDL_GetTicks();
+    return (float)delta;
 }
 
 bool pollEvents()
@@ -90,6 +94,12 @@ bool pollEvents()
                         myCamera->reset();
                     break;
                 }
+                case SDLK_1:
+                    display_mode = 1;
+                    break;
+                case SDLK_2:
+                    display_mode = 2;
+                    break;
                 case SDLK_w:
                     if(myCamera->focus)
                         myCamera->keyMap[0] = true;
@@ -105,6 +115,14 @@ bool pollEvents()
                 case SDLK_d:
                     if(myCamera->focus)
                         myCamera->keyMap[3] = true;
+                    break;
+                case SDLK_UP:
+                    if(myCamera->focus)
+                        myCamera->keyMap[4] = true;
+                    break;
+                case SDLK_DOWN:
+                    if(myCamera->focus)
+                        myCamera->keyMap[5] = true;
                     break;
             }
         }
@@ -123,6 +141,12 @@ bool pollEvents()
                     break;
                 case SDLK_d:
                     myCamera->keyMap[3] = false;
+                    break;
+                case SDLK_UP:
+                    myCamera->keyMap[4] = false;
+                    break;
+                case SDLK_DOWN:
+                    myCamera->keyMap[5] = false;
                     break;
             }
         }
@@ -161,6 +185,11 @@ void destroyAll()
         delete myModel;
     if(myCamera != nullptr)
         delete myCamera;
+    for(unsigned i = 0; i < myShaders.size(); i++)
+    {
+        if(myShaders[i] != nullptr)
+            delete myShaders[i];
+    }
     SDL_GL_DeleteContext(myContext);
     SDL_DestroyWindow(myWindow);
     SDL_Quit();

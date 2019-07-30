@@ -37,7 +37,7 @@ class Mesh
 public:
     Mesh(std::vector<Vertex> vertices, std::vector<GLuint> indices, std::vector<Texture> textures);
     ~Mesh();
-    void draw(Shader *shader);
+    void draw(GLuint program);
 private:
     void setupMesh();
     GLuint VAO, VBO, EBO;
@@ -55,7 +55,7 @@ private:
 public:
     Model(std::string path);
     ~Model();
-    void draw(Shader *shader);
+    void draw(GLuint program);
 private:
     std::string findModelName(std::string folderPath);
     void loadModel(std::string path);

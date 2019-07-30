@@ -45,7 +45,7 @@ void Mesh::setupMesh()
     glBindVertexArray(0);
 }
 
-void Mesh::draw(Shader *shader)
+void Mesh::draw(GLuint program)
 {
     // name convensions:
     // diffuse texture named: texture_diffuseN
@@ -53,6 +53,7 @@ void Mesh::draw(Shader *shader)
 
     GLuint diffuseNr = 1;
     GLuint specularNr = 1;
+    GLuint ambientNr = 1;
     for(GLuint i = 0; i < this->textures.size(); i++)
     {
         glActiveTexture(GL_TEXTURE0 + i);
@@ -64,10 +65,12 @@ void Mesh::draw(Shader *shader)
             ss << diffuseNr++;
         else if(name == "texture_specular")
             ss << specularNr++;
+        else if(name == "texture_ambient")
+            ss << ambientNr++;
         number = ss.str();
 
         glBindTexture(GL_TEXTURE_2D, this->textures[i].id);
-        glUniform1i(glGetUniformLocation(shader->programID, ("Material." + name + number).c_str()), i);
+        glUniform1i(glGetUniformLocation(program, ("Material." + name + number).c_str()), i);
     }
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(this->VAO);
@@ -97,10 +100,10 @@ Model::~Model()
     this->textures_loaded.shrink_to_fit();
 }
 
-void Model::draw(Shader *shader)
+void Model::draw(GLuint program)
 {
     for(GLuint i = 0; i < this->meshes.size(); i++)
-        this->meshes[i]->draw(shader);
+        this->meshes[i]->draw(program);
 }
 
 std::string Model::findModelName(std::string folderPath)
@@ -206,6 +209,8 @@ Mesh *Model::processMesh(aiMesh* mesh, const aiScene* scene)
         textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
         std::vector<Texture> specularMaps = this->loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
         textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
+        std::vector<Texture> ambientMaps = this->loadMaterialTextures(material, aiTextureType_AMBIENT, "texture_ambient");
+        textures.insert(textures.end(), ambientMaps.begin(), ambientMaps.end());
     }
     Mesh* newMesh = new Mesh(vertices, indices, textures);
     return newMesh;

@@ -23,7 +23,6 @@ const GLfloat YAW         = -90.0f;
 const GLfloat PITCH       =   0.0f;
 const GLfloat SPEED       =   0.005f;
 const GLfloat SENSITIVITY =   0.05f;
-const GLfloat ZOOM        =  45.0f;
 
 class Camera
 {
@@ -35,13 +34,13 @@ private:
     glm::vec3 WorldUp;
     GLfloat MovementSpeed;
     GLfloat MouseSenditivity;
-    GLfloat Zoom;
 
 public:
     glm::vec3 Position;
     glm::vec3 Front;
 
     bool focus;
+    float mv_zoom;
     std::vector<bool> keyMap;
     std::vector<int> mousePos;
 
@@ -66,7 +65,5 @@ private:
     void ProcessKeyboard(Camera_Movement direction, GLfloat deltaTime);
     // process input from mouse
     void ProcessMouseMovement(GLfloat xoffset, GLfloat yoffset, GLboolean constrainPitch = true);
-    // process input from scroll
-    void ProcessMouseScroll(GLfloat yoffset);
     void updateCameraVectors();
 };
