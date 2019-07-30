@@ -10,7 +10,7 @@ Camera *myCamera;
 std::vector<Shader*> myShaders(4, nullptr);
 int display_mode;
 
-void renderAll(float deltaT)
+void renderAll(float deltaT, float fps)
 {
     int w, h;
     SDL_GetWindowSize(myWindow, &w, &h);
@@ -52,6 +52,10 @@ void renderAll(float deltaT)
             break;
     }
 
+    static char fpsStr[10];
+    sprintf(fpsStr, "FPS: %.2f", fps);
+    myText->render(std::string(fpsStr), 10.0f, (float)h - 30.0f, 0.4f, glm::vec3(1.0f, 1.0f, 1.0f), true);
+
     SDL_GL_SwapWindow(myWindow);
 }
 
@@ -86,12 +90,22 @@ int main(int argc, char *argv[])
 
     Uint32 tNow = SDL_GetTicks();
     Uint32 tPrev = SDL_GetTicks();
+    Uint32 tFrame = SDL_GetTicks();
     bool quit = false;
+    unsigned frames = 0;
+    float fpsNow = 0.0f;
     while(!quit)
     {
         quit = pollEvents();
         float deltaT = timer(&tNow, &tPrev);
-        renderAll(deltaT);
+        renderAll(deltaT, fpsNow);
+        frames++;
+        if((tNow - tFrame) > 1000)
+        {
+            fpsNow = frames / ((tNow - tFrame) / 1000.0f);
+            tFrame = tNow;
+            frames = 0;
+        }
     }
 
     destroyAll();

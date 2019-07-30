@@ -30,4 +30,4 @@ void initAll();
 float timer(Uint32 *now, Uint32 *prev);
 bool pollEvents();
 void destroyAll();
-void renderAll(float deltaT);
+void renderAll(float deltaT, float fps);
