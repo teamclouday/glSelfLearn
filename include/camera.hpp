@@ -56,7 +56,7 @@ public:
     // return view matrix calculated using Eular Angles and LookAt Matrix
     glm::mat4 GetViewMatrix();
     // single update function to handle both key and mouse
-    void update(GLfloat deltaT);
+    void update(GLfloat deltaT, bool isMouse);
     // reset all values
     void reset();
 

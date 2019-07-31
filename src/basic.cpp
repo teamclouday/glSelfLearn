@@ -31,6 +31,7 @@ void initAll()
                                 WINDOW_HEIGHT,
                                 SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE);
     myContext = SDL_GL_CreateContext(myWindow);
+    // set vsync
     SDL_GL_SetSwapInterval(1);
     if(glewInit() != GLEW_OK)
     {
@@ -192,6 +193,7 @@ bool pollEvents()
                 SDL_CaptureMouse(SDL_TRUE);
             }
         }
+        myCamera->update(0.0f, true);
     }
     return false;
 }

@@ -22,7 +22,7 @@ void renderAll(float deltaT, float fps)
 
     float tt = (float)SDL_GetTicks() * 0.0001f;
 
-    myCamera->update(deltaT);
+    myCamera->update(deltaT, false);
 
     glm::mat4 proj_mat = glm::perspective(glm::radians(60.0f), ((float)w/(float)h), 0.1f, 1000.0f);
     // glm::mat4 view_mat = glm::lookAt(glm::vec3(20.0f*sinf(tt), 0.0f, 20.0f*cosf(tt)), glm::vec3(0.0f, -10.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));

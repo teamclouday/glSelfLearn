@@ -34,32 +34,38 @@ glm::mat4 Camera::GetViewMatrix()
     return glm::lookAt(this->Position, this->Position + this->Front, this->Up);
 }
 
-void Camera::update(GLfloat deltaT)
+void Camera::update(GLfloat deltaT, bool isMouse)
 {
     if(!this->focus)
         return;
-    if(this->keyMap[0])
-        this->ProcessKeyboard(FORWARD, deltaT);
-    if(this->keyMap[1])
-        this->ProcessKeyboard(LEFT, deltaT);
-    if(this->keyMap[2])
-        this->ProcessKeyboard(BACKWARD, deltaT);
-    if(this->keyMap[3])
-        this->ProcessKeyboard(RIGHT, deltaT);
-    if(this->keyMap[4])
-        this->mv_zoom -= 0.005f;
-    if(this->keyMap[5])
-        this->mv_zoom += 0.005f;
-    this->mv_zoom = mv_zoom > 0.0f ? mv_zoom : 0.001f;
-    this->mv_zoom = mv_zoom < 5.0f ? mv_zoom : 5.0f;
-    int x, y;
-    SDL_GetMouseState(&x, &y);
-    float xoffset = (float)(x - this->mousePos[0]);
-    float yoffset = (float)(y - this->mousePos[1]);
-    this->ProcessMouseMovement(xoffset, yoffset);
-    SDL_GetWindowSize(myWindow, &x, &y);
-    this->mousePos = {(int)(x/2), (int)(y/2)};
-    SDL_WarpMouseInWindow(myWindow, this->mousePos[0], this->mousePos[1]);
+    if(isMouse)
+    {
+        int x, y;
+        SDL_GetMouseState(&x, &y);
+        float xoffset = (float)(x - this->mousePos[0]);
+        float yoffset = (float)(y - this->mousePos[1]);
+        this->ProcessMouseMovement(xoffset, yoffset);
+        SDL_GetWindowSize(myWindow, &x, &y);
+        this->mousePos = {(int)(x/2), (int)(y/2)};
+        SDL_WarpMouseInWindow(myWindow, this->mousePos[0], this->mousePos[1]);
+    }
+    else
+    {
+        if(this->keyMap[0])
+            this->ProcessKeyboard(FORWARD, deltaT);
+        if(this->keyMap[1])
+            this->ProcessKeyboard(LEFT, deltaT);
+        if(this->keyMap[2])
+            this->ProcessKeyboard(BACKWARD, deltaT);
+        if(this->keyMap[3])
+            this->ProcessKeyboard(RIGHT, deltaT);
+        if(this->keyMap[4])
+            this->mv_zoom -= 0.005f;
+        if(this->keyMap[5])
+            this->mv_zoom += 0.005f;
+        this->mv_zoom = mv_zoom > 0.0f ? mv_zoom : 0.001f;
+        this->mv_zoom = mv_zoom < 5.0f ? mv_zoom : 5.0f;
+    }
 }
 
 void Camera::ProcessKeyboard(Camera_Movement direction, GLfloat deltaTime)
