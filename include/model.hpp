@@ -31,6 +31,7 @@ struct Texture
 
 GLuint loadTexture(std::string path);
 GLuint loadTextureArray(std::vector<std::string> path);
+GLuint loadCubeMap(std::vector<std::string> path);
 
 class Mesh
 {

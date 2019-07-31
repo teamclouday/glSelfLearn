@@ -286,7 +286,7 @@ GLuint loadTexture(std::string path)
     }
     glCreateTextures(GL_TEXTURE_2D, 1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
-    glTexStorage2D(GL_TEXTURE_2D, 4, GL_RGBA8, width, height);
+    glTexStorage2D(GL_TEXTURE_2D, 4, GL_RGBA16, width, height);
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data);
     // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
     glGenerateTextureMipmap(texture);
@@ -297,4 +297,34 @@ GLuint loadTexture(std::string path)
     glBindTexture(GL_TEXTURE_2D, 0);
     SOIL_free_image_data(data);
     return texture;
+}
+
+GLuint loadCubeMap(std::vector<std::string> path)
+{
+    GLuint tex;
+    glGenTextures(1, &tex);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, tex);
+    unsigned char *data;
+    int w, h;
+    for(unsigned i = 0; i < path.size(); i++)
+    {
+        data = SOIL_load_image(path[i].c_str(), &w, &h, 0, SOIL_LOAD_RGB);
+        if(data)
+        {
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+            SOIL_free_image_data(data);
+        }
+        else
+        {
+            printf("Failed to load image: %s\n", path[i].c_str());
+            exit(ERROR_READ_IMAGE);
+        }
+    }
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+    return tex;
 }

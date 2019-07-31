@@ -7,9 +7,9 @@ Shader *myShader;
 Model *myModel;
 Camera *myCamera;
 
-std::vector<Shader*> myShaders(6, nullptr);
+std::vector<Shader*> myShaders(7, nullptr);
 int display_mode;
-GLuint texSphe, texRect;
+GLuint texSphe, texRect, texCubeMap, cubeVAO;
 
 void renderAll(float deltaT, float fps)
 {
@@ -22,20 +22,35 @@ void renderAll(float deltaT, float fps)
 
     myCamera->update(deltaT);
 
-    glm::mat4 proj_mat = glm::perspective(45.0f, ((float)w/(float)h), 0.1f, 1000.0f);
+    glm::mat4 proj_mat = glm::perspective(glm::radians(60.0f), ((float)w/(float)h), 0.1f, 1000.0f);
     glm::mat4 view_mat = myCamera->GetViewMatrix();
-    glm::mat4 mv_mat = glm::mat4(1.0f);
+    glm::mat4 mv_mat(1.0f);
     mv_mat = glm::translate(mv_mat, glm::vec3(0.0f, -40.0f, -100.0f));
     mv_mat = glm::scale(mv_mat, glm::vec3(myCamera->mv_zoom));
     mv_mat = view_mat * mv_mat;
 
     Shader *thisShader = myShaders[display_mode-1];
-    thisShader->use();
+
+    if(display_mode == 7)
+    {
+        glDisable(GL_DEPTH_TEST);
+        myShader->use();
+        glBindTexture(GL_TEXTURE_CUBE_MAP, texCubeMap);
+        glUniformMatrix4fv(glGetUniformLocation(myShader->programID, "view_mat"), 1, GL_FALSE, glm::value_ptr(view_mat));
+        glUniformMatrix4fv(glGetUniformLocation(myShader->programID, "proj_mat"), 1, GL_FALSE, glm::value_ptr(proj_mat));
+        glBindVertexArray(cubeVAO);
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        glBindVertexArray(0);
+        myShader->disuse();
+        glEnable(GL_DEPTH_TEST);
+    }
 
     if(display_mode == 5)
         glBindTexture(GL_TEXTURE_2D, texSphe);
     else if(display_mode == 6)
         glBindTexture(GL_TEXTURE_2D, texRect);
+
+    thisShader->use();
 
     glUniformMatrix4fv(glGetUniformLocation(thisShader->programID, "mv_mat"), 1, GL_FALSE, glm::value_ptr(mv_mat));
     glUniformMatrix4fv(glGetUniformLocation(thisShader->programID, "view_mat"), 1, GL_FALSE, glm::value_ptr(view_mat));
@@ -64,6 +79,9 @@ void renderAll(float deltaT, float fps)
             break;
         case 6:
             myText->render("Equirectangular Environment Mapping", 10.0f, 10.0f, 0.6f, glm::vec3(1.0f, 1.0f, 1.0f), true);
+            break;
+        case 7:
+            myText->render("Cubemap Environment Mapping", 10.0f, 10.0f, 0.6f, glm::vec3(1.0f, 1.0f, 1.0f), true);
             break;
     }
 
@@ -113,11 +131,35 @@ int main(int argc, char *argv[])
     myShaders[5]->add("./shaders/env.vert", GL_VERTEX_SHADER);
     myShaders[5]->add("./shaders/envrect.frag", GL_FRAGMENT_SHADER);
     myShaders[5]->compile(false);
+    // [7] Cubemap Env Mapping
+    myShaders[6] = new Shader();
+    myShaders[6]->add("./shaders/env.vert", GL_VERTEX_SHADER);
+    myShaders[6]->add("./shaders/envcube.frag", GL_FRAGMENT_SHADER);
+    myShaders[6]->compile(false);
+
+    // shader for cubemap rendering
+    myShader = new Shader();
+    myShader->add("./shaders/cube.vert", GL_VERTEX_SHADER);
+    myShader->add("./shaders/cube.frag", GL_FRAGMENT_SHADER);
+    myShader->compile(false);
 
     texSphe = loadTexture("./images/envmap1.jpeg");
     glBindTextureUnit(0, texSphe);
     texRect = loadTexture("./images/envmap4.jpg");
     glBindTextureUnit(0, texRect);
+
+    std::vector<std::string> cubemap_path = {
+        "./images/envmap_stormydays/rt.jpg",
+        "./images/envmap_stormydays/lf.jpg",
+        "./images/envmap_stormydays/up.jpg",
+        "./images/envmap_stormydays/dn.jpg",
+        "./images/envmap_stormydays/bk.jpg",
+        "./images/envmap_stormydays/ft.jpg",
+    };
+    texCubeMap = loadCubeMap(cubemap_path);
+    glBindTextureUnit(0, texCubeMap);
+    glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+    glGenVertexArrays(1, &cubeVAO);
     
     display_mode = 1;
 
