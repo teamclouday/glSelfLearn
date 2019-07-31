@@ -118,6 +118,9 @@ bool pollEvents()
                 case SDLK_8:
                     display_mode = 8;
                     break;
+                case SDLK_9:
+                    display_mode = 9;
+                    break;
                 case SDLK_w:
                     if(myCamera->focus)
                         myCamera->keyMap[0] = true;

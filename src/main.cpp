@@ -7,7 +7,7 @@ Shader *myShader;
 Model *myModel;
 Camera *myCamera;
 
-std::vector<Shader*> myShaders(8, nullptr);
+std::vector<Shader*> myShaders(9, nullptr);
 int display_mode;
 GLuint texSphe, texRect, texCubeMap, cubeVAO;
 
@@ -20,18 +20,22 @@ void renderAll(float deltaT, float fps)
     glClearDepth(1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    float tt = (float)SDL_GetTicks() * 0.0001f;
+
     myCamera->update(deltaT);
 
     glm::mat4 proj_mat = glm::perspective(glm::radians(60.0f), ((float)w/(float)h), 0.1f, 1000.0f);
-    glm::mat4 view_mat = myCamera->GetViewMatrix();
+    glm::mat4 view_mat = glm::lookAt(glm::vec3(20.0f*sinf(tt), 0.0f, 20.0f*cosf(tt)), glm::vec3(0.0f, -10.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    // glm::mat4 view_mat = myCamera->GetViewMatrix();
     glm::mat4 mv_mat(1.0f);
-    mv_mat = glm::translate(mv_mat, glm::vec3(0.0f, -40.0f, -100.0f));
-    mv_mat = glm::scale(mv_mat, glm::vec3(myCamera->mv_zoom));
+    mv_mat = glm::rotate(mv_mat, glm::radians(-120.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    mv_mat = glm::translate(mv_mat, glm::vec3(10.0f, -20.0f, -70.0f));
+    mv_mat = glm::scale(mv_mat, glm::vec3(0.4f));
     mv_mat = view_mat * mv_mat;
 
     Shader *thisShader = myShaders[display_mode-1];
 
-    if(display_mode >= 7)
+    if(display_mode == 7 || display_mode == 8)
     {
         glm::mat4 cube_mat = glm::mat4(glm::mat3(view_mat));
         glDepthMask(GL_FALSE);
@@ -54,7 +58,7 @@ void renderAll(float deltaT, float fps)
 
     thisShader->use();
 
-    if(display_mode >= 7)
+    if(display_mode == 7 || display_mode == 8)
     {
         int indicator = (display_mode == 7) ? 1 : -1;
         glUniform1iv(glGetUniformLocation(thisShader->programID, "indicator"), 1, &indicator);
@@ -94,6 +98,9 @@ void renderAll(float deltaT, float fps)
         case 8:
             myText->render("Cubemap Environment Mapping (Refraction)", 10.0f, 10.0f, 0.6f, glm::vec3(1.0f, 1.0f, 1.0f), true);
             break;
+        case 9:
+            myText->render("No Shading", 10.0f, 10.0f, 0.6f, glm::vec3(1.0f, 1.0f, 1.0f), true);
+            break;
     }
 
     static char fpsStr[10];
@@ -109,7 +116,7 @@ int main(int argc, char *argv[])
 
     myText = new glText("./fonts/roboto/Roboto-Regular.ttf", 48);
     myModel = new Model("./models/medieval_village");
-    myCamera = new Camera(glm::vec3(0.0f, 0.0f, 80.0f));
+    myCamera = new Camera(glm::vec3(0.0f, 10.0f, 20.0f));
 
     // init shaders
     // [1] Gouraud Shading
@@ -152,6 +159,11 @@ int main(int argc, char *argv[])
     myShaders[7]->add("./shaders/env.vert", GL_VERTEX_SHADER);
     myShaders[7]->add("./shaders/envcube.frag", GL_FRAGMENT_SHADER);
     myShaders[7]->compile(false);
+    // [9] no light
+    myShaders[8] = new Shader();
+    myShaders[8]->add("./shaders/none.vert", GL_VERTEX_SHADER);
+    myShaders[8]->add("./shaders/none.frag", GL_FRAGMENT_SHADER);
+    myShaders[8]->compile(false);
 
     // shader for cubemap rendering
     myShader = new Shader();
@@ -177,7 +189,7 @@ int main(int argc, char *argv[])
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
     glGenVertexArrays(1, &cubeVAO);
     
-    display_mode = 1;
+    display_mode = 9;
 
     printf("%s\n", glGetString(GL_RENDERER));
 
