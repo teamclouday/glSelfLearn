@@ -11,7 +11,5 @@ layout (location = 0) out vec4 color;
 
 void main()
 {
-    vec3 coord = fs_in.tc;
-    // coord.z = -coord.z;
-    color = texture(tex_cubemap, coord);
+    color = texture(tex_cubemap, fs_in.tc);
 }

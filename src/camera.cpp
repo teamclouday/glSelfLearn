@@ -56,7 +56,7 @@ void Camera::update(GLfloat deltaT)
     SDL_GetMouseState(&x, &y);
     float xoffset = (float)(x - this->mousePos[0]);
     float yoffset = (float)(y - this->mousePos[1]);
-    this->ProcessMouseMovement(xoffset, yoffset, GL_TRUE);
+    this->ProcessMouseMovement(xoffset, yoffset);
     SDL_GetWindowSize(myWindow, &x, &y);
     this->mousePos = {(int)(x/2), (int)(y/2)};
     SDL_WarpMouseInWindow(myWindow, this->mousePos[0], this->mousePos[1]);
