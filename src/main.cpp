@@ -25,8 +25,8 @@ void renderAll(float deltaT, float fps)
     myCamera->update(deltaT);
 
     glm::mat4 proj_mat = glm::perspective(glm::radians(60.0f), ((float)w/(float)h), 0.1f, 1000.0f);
-    glm::mat4 view_mat = glm::lookAt(glm::vec3(20.0f*sinf(tt), 0.0f, 20.0f*cosf(tt)), glm::vec3(0.0f, -10.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-    // glm::mat4 view_mat = myCamera->GetViewMatrix();
+    // glm::mat4 view_mat = glm::lookAt(glm::vec3(20.0f*sinf(tt), 0.0f, 20.0f*cosf(tt)), glm::vec3(0.0f, -10.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    glm::mat4 view_mat = myCamera->GetViewMatrix();
     glm::mat4 mv_mat(1.0f);
     mv_mat = glm::rotate(mv_mat, glm::radians(-120.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     mv_mat = glm::translate(mv_mat, glm::vec3(10.0f, -20.0f, -70.0f));
