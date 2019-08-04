@@ -7,9 +7,6 @@ extern glText *myText;
 extern Model *myModel;
 extern Camera *myCamera;
 
-extern int display_mode;
-extern std::vector<Shader*> myShaders;
-
 void initAll()
 {
     if(SDL_Init(SDL_INIT_VIDEO) < 0)
@@ -95,33 +92,6 @@ bool pollEvents()
                         myCamera->reset();
                     break;
                 }
-                case SDLK_1:
-                    display_mode = 1;
-                    break;
-                case SDLK_2:
-                    display_mode = 2;
-                    break;
-                case SDLK_3:
-                    display_mode = 3;
-                    break;
-                case SDLK_4:
-                    display_mode = 4;
-                    break;
-                case SDLK_5:
-                    display_mode = 5;
-                    break;
-                case SDLK_6:
-                    display_mode = 6;
-                    break;
-                case SDLK_7:
-                    display_mode = 7;
-                    break;
-                case SDLK_8:
-                    display_mode = 8;
-                    break;
-                case SDLK_9:
-                    display_mode = 9;
-                    break;
                 case SDLK_w:
                     if(myCamera->focus)
                         myCamera->keyMap[0] = true;
@@ -208,11 +178,6 @@ void destroyAll()
         delete myModel;
     if(myCamera != nullptr)
         delete myCamera;
-    for(unsigned i = 0; i < myShaders.size(); i++)
-    {
-        if(myShaders[i] != nullptr)
-            delete myShaders[i];
-    }
     SDL_GL_DeleteContext(myContext);
     SDL_DestroyWindow(myWindow);
     SDL_Quit();
