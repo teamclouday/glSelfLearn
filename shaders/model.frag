@@ -36,6 +36,6 @@ void main()
     vec3 R = reflect(-L, N);
     vec3 diffuse = max(dot(N, L), 0.0) * diffColor;
     vec3 specular = pow(max(dot(R, V), 0.0), specPower) * specColor;
-    color = textureProj(shadow_tex, fs_in.shadow_coord) * mix(vec4(1.0), vec4(lightColor * (diffuse + specular + ambient), 1.0), bvec4(full_shading));
-    // color = vec4(lightColor * (diffuse + specular + ambient), 1.0);
+    // color = textureProj(shadow_tex, fs_in.shadow_coord) * mix(vec4(1.0), vec4(lightColor * (diffuse + specular + ambient), 1.0), bvec4(full_shading));
+    color = vec4(lightColor * (diffuse + specular + ambient), 1.0);
 }

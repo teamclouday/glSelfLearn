@@ -15,6 +15,8 @@ GLuint shadowFBO, shadowTex, shadowColorTex;
 #define DEPTH_TEX_WIDTH     512
 #define DEPTH_TEX_HEIGHT    512
 
+Model *otherModel;
+
 void renderAll(float deltaT, float fps)
 {
     int w, h;
@@ -25,7 +27,7 @@ void renderAll(float deltaT, float fps)
     // float tt = (float)SDL_GetTicks() * 0.001f;
 
     glm::mat4 view_mat = myCamera->GetViewMatrix();
-    glm::mat4 proj_mat = glm::perspective(glm::radians(60.0f), (float)w/(float)h, 0.1f, 500.0f);
+    glm::mat4 proj_mat = glm::perspective(glm::radians(50.0f), (float)w/(float)h, 0.1f, 500.0f);
     glm::vec3 lightPos = glm::vec3(0.0f, 10.0f, -20.0f);
     glm::vec3 lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
     glm::mat4 light_model_mat(1.0f);
@@ -40,7 +42,10 @@ void renderAll(float deltaT, float fps)
     glm::mat4 model_mat(1.0f);
     model_mat = glm::scale(model_mat, glm::vec3(myCamera->mv_zoom));
     model_mat = glm::translate(model_mat, glm::vec3(0.0f, -30.0f, -150.0f));
-    
+    glm::mat4 model_mat2(1.0f);
+    model_mat2 = glm::scale(model_mat2, glm::vec3(0.01f));
+
+
     // render for shadow depth
     glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
     glViewport(0, 0, DEPTH_TEX_WIDTH, DEPTH_TEX_HEIGHT);
@@ -49,12 +54,15 @@ void renderAll(float deltaT, float fps)
     lightShader->use();
     static const GLenum buffs[] = {GL_COLOR_ATTACHMENT0};
     glDrawBuffers(1, buffs);
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClearDepth(1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glUniformMatrix4fv(glGetUniformLocation(lightShader->programID, "mvp"), 1, GL_FALSE, glm::value_ptr(light_proj_mat * light_view_mat * model_mat));
     myModel->draw(lightShader->programID);
+
+    glUniformMatrix4fv(glGetUniformLocation(lightShader->programID, "mvp"), 1, GL_FALSE, glm::value_ptr(light_proj_mat * light_view_mat * model_mat2));
+    otherModel->draw(lightShader->programID);
 
     glDisable(GL_POLYGON_OFFSET_FILL);
     lightShader->disuse();
@@ -79,6 +87,8 @@ void renderAll(float deltaT, float fps)
     glUniform3fv(glGetUniformLocation(myShader->programID, "lightPos"), 1, glm::value_ptr(lightPos));
     glUniform3fv(glGetUniformLocation(myShader->programID, "lightColor"), 1, glm::value_ptr(lightColor));
     myModel->draw(myShader->programID);
+    glUniformMatrix4fv(glGetUniformLocation(myShader->programID, "mv_mat"), 1, GL_FALSE, glm::value_ptr(view_mat * model_mat2));
+    otherModel->draw(myShader->programID);
     glBindTexture(GL_TEXTURE_2D, 0);
     myShader->disuse();
 
@@ -121,6 +131,8 @@ int main(int argc, char *argv[])
     lightCubeShader->add("./shaders/lightcube.vert", GL_VERTEX_SHADER);
     lightCubeShader->add("./shaders/lightcube.frag", GL_FRAGMENT_SHADER);
     lightCubeShader->compile(false);
+
+    otherModel = new Model("./models/chocho_club");
 
     glGenVertexArrays(1, &lightVAO);
 
