@@ -8,7 +8,28 @@ Model *myModel;
 Camera *myCamera;
 bool lineMode;
 
-GLuint tex_toon;
+Shader *SSAO;
+GLuint FBO, VAO, buffer;
+GLuint fboTex[3];
+
+struct SAMPLE_POINTS
+{
+    glm::vec4 points[256];
+    glm::vec4 random_vectors[256];
+};
+
+SAMPLE_POINTS points_data;
+
+static unsigned int seed = 0x13371337;
+static inline float random_float()
+{
+    float res;
+    unsigned tmp;
+    seed *= 16807;
+    tmp = seed ^ (seed >> 4) ^ (seed << 15);
+    *((unsigned *)&res) = (tmp >> 9) | 0x3F800000;
+    return (res - 1.0f);
+}
 
 void renderAll(float deltaT, float fps)
 {
@@ -23,15 +44,40 @@ void renderAll(float deltaT, float fps)
 
     glm::mat4 proj_mat = glm::perspective(glm::radians(45.0f), (float)w/(float)h, 0.1f, 1000.0f);
     glm::mat4 mv_mat = myCamera->GetViewMatrix();
+    
+    glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+    glEnable(GL_DEPTH_TEST);
+
+    static const float black[] = {0.0f, 0.0f, 0.0f, 1.0f};
+    static const float one = 1.0f;
+
+    glClearBufferfv(GL_COLOR, 0, black);
+    glClearBufferfv(GL_COLOR, 1, black);
+    glClearBufferfv(GL_DEPTH, 0, &one);
+
+    glBindBufferBase(GL_UNIFORM_BUFFER, 0, buffer);
     myShader->use();
-    glUniformMatrix4fv(glGetUniformLocation(myShader->programID, "mv_mat"), 1, GL_FALSE, glm::value_ptr(mv_mat));
     glUniformMatrix4fv(glGetUniformLocation(myShader->programID, "proj_mat"), 1, GL_FALSE, glm::value_ptr(proj_mat));
+    glUniformMatrix4fv(glGetUniformLocation(myShader->programID, "mv_mat"), 1, GL_FALSE, glm::value_ptr(mv_mat));
     myModel->draw(myShader->programID);
-    myShader->disuse(); 
+    myShader->disuse();
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    SSAO->use();
+    glUniform1f(glGetUniformLocation(SSAO->programID, "ssao_radius"), 5.0f * (float)w/1000.0f);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, fboTex[0]);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, fboTex[1]);
+    glDisable(GL_DEPTH_TEST);
+    glBindVertexArray(VAO);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    glBindVertexArray(0);
+    SSAO->disuse();
 
     char fpsNow[10];
     sprintf(fpsNow, "FPS: %.2f", fps);
-    myText->render(std::string(fpsNow), 10.0f, (float)h-30.0f, 0.5f, glm::vec3(1.0f, 1.0f, 1.0f), true);
+    myText->render(std::string(fpsNow), 10.0f, (float)h-30.0f, 0.5f, glm::vec3(0.0f, 0.0f, 0.0f), true);
 
     SDL_GL_SwapWindow(myWindow);
 }
@@ -45,23 +91,68 @@ int main(int argc, char *argv[])
     myCamera = new Camera(glm::vec3(0.0f, 10.0f, 20.0f));
 
     myShader = new Shader();
-    myShader->add("./shaders/toon.vert", GL_VERTEX_SHADER);
-    myShader->add("./shaders/toon.frag", GL_FRAGMENT_SHADER);
+    myShader->add("./shaders/render.vert", GL_VERTEX_SHADER);
+    myShader->add("./shaders/render.frag", GL_FRAGMENT_SHADER);
     myShader->compile(false);
 
-    static const GLubyte toon_tex_data[] = {
-        0x44, 0x00, 0x11, 0x00,
-        0x88, 0x44, 0x11, 0x00,
-        0xCC, 0x00, 0x44, 0x00,
-        0xFF, 0x00, 0x00, 0x00,
-    };
-    glGenTextures(1, &tex_toon);
-    glBindTexture(GL_TEXTURE_1D, tex_toon);
-    glTexStorage1D(GL_TEXTURE_1D, 1, GL_RGB8, sizeof(toon_tex_data) / 4);
-    glTexSubImage1D(GL_TEXTURE_1D, 0, 0, sizeof(toon_tex_data) / 4, GL_RGBA, GL_UNSIGNED_BYTE, toon_tex_data);
-    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    SSAO = new Shader();
+    SSAO->add("./shaders/ssao.vert", GL_VERTEX_SHADER);
+    SSAO->add("./shaders/ssao.frag", GL_FRAGMENT_SHADER);
+    SSAO->compile(false);
+
+    glGenFramebuffers(1, &FBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+    glGenTextures(3, fboTex);
+
+    glBindTexture(GL_TEXTURE_2D, fboTex[0]);
+    glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB16F, 2048, 2048);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    glBindTexture(GL_TEXTURE_2D, fboTex[1]);
+    glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA32F, 2048, 2048);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    glBindTexture(GL_TEXTURE_2D, fboTex[2]);
+    glTexStorage2D(GL_TEXTURE_2D, 1, GL_DEPTH_COMPONENT32F, 2048, 2048);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, fboTex[0], 0);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, fboTex[1], 0);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,  fboTex[2], 0);
+
+    static const GLenum drawBuffs[] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
+    glDrawBuffers(2, drawBuffs);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    glGenVertexArrays(1, &VAO);
+
+    for(unsigned i = 0; i < 256; i++)
+    {
+        do
+        {
+            points_data.points[i] = glm::vec4(random_float() * 2.0f - 1.0f,
+                                              random_float() * 2.0f - 1.0f,
+                                              random_float(), 0.0f);
+        }
+        while(glm::length(points_data.points[i]) > 1.0f);
+        points_data.points[i] = glm::normalize(points_data.points[i]);
+    }
+    for(unsigned i = 0; i < 256; i++)
+    {
+        points_data.random_vectors[i] = glm::vec4(random_float(), random_float(),
+                                                  random_float(), random_float());
+    }
+
+    glGenBuffers(1, &buffer);
+    glBindBuffer(GL_UNIFORM_BUFFER, buffer);
+    glBufferData(GL_UNIFORM_BUFFER, sizeof(SAMPLE_POINTS), &points_data, GL_STATIC_DRAW);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
     lineMode = false;
 
