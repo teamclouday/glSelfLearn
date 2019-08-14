@@ -6,11 +6,9 @@ glText *myText;
 Shader *myShader;
 Model *myModel;
 Camera *myCamera;
-
-GLuint terrColor, terrShape;
-GLuint VAO;
-
 bool lineMode;
+
+GLuint tex_toon;
 
 void renderAll(float deltaT, float fps)
 {
@@ -23,24 +21,13 @@ void renderAll(float deltaT, float fps)
 
     myCamera->update(deltaT, false);
 
-    glm::mat4 proj_mat = glm::perspective(glm::radians(60.0f), (float)w/(float)h, 0.1f, 1000.0f);
+    glm::mat4 proj_mat = glm::perspective(glm::radians(45.0f), (float)w/(float)h, 0.1f, 1000.0f);
     glm::mat4 mv_mat = myCamera->GetViewMatrix();
-
     myShader->use();
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, terrShape);
-    glUniformMatrix4fv(glGetUniformLocation(myShader->programID, "proj_mat"), 1, GL_FALSE, glm::value_ptr(proj_mat));
     glUniformMatrix4fv(glGetUniformLocation(myShader->programID, "mv_mat"), 1, GL_FALSE, glm::value_ptr(mv_mat));
-    glUniformMatrix4fv(glGetUniformLocation(myShader->programID, "mvp_mat"), 1, GL_FALSE, glm::value_ptr(proj_mat * mv_mat));
-    glBindVertexArray(VAO);
-    if(lineMode)
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    else
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    glDrawArraysInstanced(GL_PATCHES, 0, 4, 64 * 64);
-    myShader->disuse();
-
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glUniformMatrix4fv(glGetUniformLocation(myShader->programID, "proj_mat"), 1, GL_FALSE, glm::value_ptr(proj_mat));
+    myModel->draw(myShader->programID);
+    myShader->disuse(); 
 
     char fpsNow[10];
     sprintf(fpsNow, "FPS: %.2f", fps);
@@ -54,24 +41,27 @@ int main(int argc, char *argv[])
     initAll();
 
     myText = new glText("./fonts/roboto/Roboto-Regular.ttf", 48);
-    // myModel = new Model("./models/medieval_village");
-    myCamera = new Camera(glm::vec3(0.0f, 10.0f, 20.0f));
+    myModel = new Model("./models/medieval_village");
+    myCamera = new Camera(glm::vec3(0.0f, 10.0f, 0.0f));
 
     myShader = new Shader();
-    myShader->add("./shaders/fog.vert", GL_VERTEX_SHADER);
-    myShader->add("./shaders/fog.tesc", GL_TESS_CONTROL_SHADER);
-    myShader->add("./shaders/fog.tese", GL_TESS_EVALUATION_SHADER);
-    myShader->add("./shaders/fog.frag", GL_FRAGMENT_SHADER);
+    myShader->add("./shaders/toon.vert", GL_VERTEX_SHADER);
+    myShader->add("./shaders/toon.frag", GL_FRAGMENT_SHADER);
     myShader->compile(false);
 
-    glGenVertexArrays(1, &VAO);
-
-    glPatchParameteri(GL_PATCH_VERTICES, 4);
-
-    terrShape = loadTexture("./images/terrain.jpg");
-    terrColor = loadTexture("./images/face.png");
-    glBindTextureUnit(0, terrShape);
-    glBindTextureUnit(1, terrColor);
+    static const GLubyte toon_tex_data[] = {
+        0x44, 0x00, 0x00, 0x00,
+        0x88, 0x00, 0x00, 0x00,
+        0xCC, 0x00, 0x00, 0x00,
+        0xFF, 0x00, 0x00, 0x00,
+    };
+    glGenTextures(1, &tex_toon);
+    glBindTexture(GL_TEXTURE_1D, tex_toon);
+    glTexStorage1D(GL_TEXTURE_1D, 1, GL_RGB8, sizeof(toon_tex_data) / 4);
+    glTexSubImage1D(GL_TEXTURE_1D, 0, 0, sizeof(toon_tex_data) / 4, GL_RGBA, GL_UNSIGNED_BYTE, toon_tex_data);
+    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 
     lineMode = false;
 
