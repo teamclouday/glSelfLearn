@@ -41,8 +41,8 @@ int main(int argc, char *argv[])
     initAll();
 
     myText = new glText("./fonts/roboto/Roboto-Regular.ttf", 48);
-    myModel = new Model("./models/medieval_village");
-    myCamera = new Camera(glm::vec3(0.0f, 10.0f, 0.0f));
+    myModel = new Model("./models/crysis_nano_suit_2");
+    myCamera = new Camera(glm::vec3(0.0f, 10.0f, 20.0f));
 
     myShader = new Shader();
     myShader->add("./shaders/toon.vert", GL_VERTEX_SHADER);
@@ -50,9 +50,9 @@ int main(int argc, char *argv[])
     myShader->compile(false);
 
     static const GLubyte toon_tex_data[] = {
-        0x44, 0x00, 0x00, 0x00,
-        0x88, 0x00, 0x00, 0x00,
-        0xCC, 0x00, 0x00, 0x00,
+        0x44, 0x00, 0x11, 0x00,
+        0x88, 0x44, 0x11, 0x00,
+        0xCC, 0x00, 0x44, 0x00,
         0xFF, 0x00, 0x00, 0x00,
     };
     glGenTextures(1, &tex_toon);
