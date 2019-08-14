@@ -9,7 +9,7 @@ uniform float ssao_level = 1.0;
 uniform float object_level = 0.3;
 uniform float ssao_radius = 5.0;
 uniform bool weight_by_angle = true;
-uniform uint point_count = 10;
+uniform uint point_count = 256;
 uniform bool randomize_points = true;
 
 layout (binding = 0, std140) uniform SAMPLE_POINTS

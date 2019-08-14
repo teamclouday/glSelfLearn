@@ -11,9 +11,9 @@ in VS_OUT
 } fs_in;
 
 uniform vec3 diffColor = vec3(0.8, 0.8, 0.8);
-uniform vec3 specColor = vec3(0.01);
+uniform vec3 specColor = vec3(0.1);
 uniform float specPow = 128.0;
-uniform float shadingLevel = 0.7;
+uniform float shadingLevel = 1.0;
 
 void main()
 {

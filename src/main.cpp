@@ -18,8 +18,6 @@ struct SAMPLE_POINTS
     glm::vec4 random_vectors[256];
 };
 
-SAMPLE_POINTS points_data;
-
 static unsigned int seed = 0x13371337;
 static inline float random_float()
 {
@@ -132,6 +130,7 @@ int main(int argc, char *argv[])
 
     glGenVertexArrays(1, &VAO);
 
+    SAMPLE_POINTS points_data;
     for(unsigned i = 0; i < 256; i++)
     {
         do
