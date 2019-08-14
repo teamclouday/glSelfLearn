@@ -7,6 +7,8 @@ extern glText *myText;
 extern Model *myModel;
 extern Camera *myCamera;
 
+extern bool lineMode;
+
 void initAll()
 {
     if(SDL_Init(SDL_INIT_VIDEO) < 0)
@@ -115,6 +117,9 @@ bool pollEvents()
                 case SDLK_DOWN:
                     if(myCamera->focus)
                         myCamera->keyMap[5] = true;
+                    break;
+                case SDLK_SPACE:
+                    lineMode = !lineMode;
                     break;
             }
         }
