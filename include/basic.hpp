@@ -26,6 +26,13 @@
 
 #define SPF (1000 / 60)
 
+struct SHADER_DATA
+{
+    float zoom = 1.0f;
+    glm::vec2 offset = glm::vec2(0.0f, 0.0f);
+    glm::vec2 C = glm::vec2(0.0f, 0.0f);
+};
+
 void initAll();
 float timer(Uint32 *now, Uint32 *prev);
 bool pollEvents();

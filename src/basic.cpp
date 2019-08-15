@@ -8,6 +8,7 @@ extern Model *myModel;
 extern Camera *myCamera;
 
 extern bool lineMode;
+extern SHADER_DATA myData;
 
 void initAll()
 {
@@ -120,6 +121,24 @@ bool pollEvents()
                     break;
                 case SDLK_SPACE:
                     lineMode = !lineMode;
+                    break;
+                case SDLK_i:
+                    myData.offset[1] -= myData.zoom * 0.02f;
+                    break;
+                case SDLK_k:
+                    myData.offset[1] += myData.zoom * 0.02f;
+                    break;
+                case SDLK_j:
+                    myData.offset[0] -= myData.zoom * 0.02f;
+                    break;
+                case SDLK_l:
+                    myData.offset[0] += myData.zoom * 0.02f;
+                    break;
+                case SDLK_9:
+                    myData.zoom *= 1.02f;
+                    break;
+                case SDLK_0:
+                    myData.zoom /= 1.02f;
                     break;
             }
         }
