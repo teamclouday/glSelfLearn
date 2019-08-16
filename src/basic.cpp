@@ -152,7 +152,7 @@ bool pollEvents()
                     break;
                 case SDLK_0:
                     maxDepth++;
-                    maxDepth = (maxDepth <= MAX_RECURSION_DEPTH) ? maxDepth : MAX_RECURSION_DEPTH;
+                    maxDepth = (maxDepth <= (MAX_RECURSION_DEPTH - 1)) ? maxDepth : (MAX_RECURSION_DEPTH - 1);
                     break;
             }
         }

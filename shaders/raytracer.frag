@@ -186,7 +186,7 @@ bool point_visible_to_light(vec3 point, vec3 L)
 // function to calc final color of the point
 vec3 light_point(vec3 position, vec3 normal, vec3 V, light l)
 {
-    vec3 ambient = vec3(0.001);
+    vec3 ambient = vec3(0.0001);
 
     if(!point_visible_to_light(position, l.position))
     {
@@ -291,8 +291,8 @@ void main()
         vec3 v = normalize(hit_position - R.origin);
         origin = hit_position;
         reflected = reflect(v, hit_normal);
-        reflected_color = S[sphere_index].color.rgb * 0.5;
+        reflected_color = S[sphere_index].color.rgb * 0.4;
         refracted = refract(v, hit_normal, 3.14);
-        refracted_color = input_color * S[sphere_index].color.rgb * 0.5;
+        refracted_color = input_color * S[sphere_index].color.rgb * 0.4;
     }
 }

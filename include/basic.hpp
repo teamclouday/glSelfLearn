@@ -26,7 +26,7 @@
 
 #define SPF (1000 / 60)
 
-#define MAX_RECURSION_DEPTH 10
+#define MAX_RECURSION_DEPTH 11
 
 void initAll();
 float timer(Uint32 *now, Uint32 *prev);

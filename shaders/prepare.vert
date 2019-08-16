@@ -10,7 +10,7 @@ uniform vec3 ray_origin;
 uniform mat4 ray_lookat;
 uniform float aspect = 0.75;
 
-uniform vec3 direction_scale = vec3(1.9, 1.9, 1.0);
+uniform vec3 direction_scale = vec3(1.0, 1.0, 1.0);
 uniform vec3 direction_bias = vec3(0.0, 0.0, 0.0);
 
 // layout (binding = 0, std140) uniform UNIFORM_BLOCK

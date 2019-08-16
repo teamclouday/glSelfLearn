@@ -108,7 +108,7 @@ void renderAll(float deltaT, float fps)
     glClearDepth(1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    myCamera->update(deltaT, false);
+    // myCamera->update(deltaT, false);
     float tt = (float)SDL_GetTicks() * 0.0001f;
     
     // glm::mat4 view_mat = myCamera->GetViewMatrix();
@@ -139,8 +139,8 @@ void renderAll(float deltaT, float fps)
                                 (sinf(fi * 300.0f + tt) * cosf(fi * 200.0f + tt)) * 20.0f);
         s[i].radius = fi * 2.3f + 3.5f;
         float r = fi * 61.0f;
-        float g = r + 0.25f;
-        float b = g + 0.25f;
+        float g = r + 0.14f;
+        float b = g + 0.28f;
         r = (r - floorf(r)) * 0.8f + 0.2f;
         g = (g - floorf(g)) * 0.8f + 0.2f;
         b = (b - floorf(b)) * 0.8f + 0.2f;
