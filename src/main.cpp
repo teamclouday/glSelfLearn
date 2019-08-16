@@ -81,6 +81,20 @@ void recurse(int depth)
 
     if(depth != (maxDepth - 1))
         recurse(depth + 1);
+
+    // if(depth != 0)
+    // {
+    //     glActiveTexture(GL_TEXTURE0);
+    //     glBindTexture(GL_TEXTURE_2D, texPosition[depth]);
+
+    //     glActiveTexture(GL_TEXTURE1);
+    //     glBindTexture(GL_TEXTURE_2D, texRefracted[depth]);
+
+    //     glActiveTexture(GL_TEXTURE2);
+    //     glBindTexture(GL_TEXTURE_2D, texRefractionIntensity[depth]);
+
+    //     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    // }
     
     glDisablei(GL_BLEND, 0);
 }

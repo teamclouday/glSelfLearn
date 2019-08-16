@@ -186,7 +186,7 @@ bool point_visible_to_light(vec3 point, vec3 L)
 // function to calc final color of the point
 vec3 light_point(vec3 position, vec3 normal, vec3 V, light l)
 {
-    vec3 ambient = vec3(0.0);
+    vec3 ambient = vec3(0.001);
 
     if(!point_visible_to_light(position, l.position))
     {
@@ -203,9 +203,9 @@ vec3 light_point(vec3 position, vec3 normal, vec3 V, light l)
         float diff = clamp(dot(N, L), 0.0, 1.0);
         float spec = pow(clamp(dot(R, N), 0.0, 1.0), 260.0);
 
-        vec3 rim_color = vec3(0.0);
+        vec3 rim_color = vec3(0.05);
         vec3 diff_color = vec3(0.125);
-        vec3 spec_color = vec3(0.1);
+        vec3 spec_color = vec3(0.2);
 
         return ambient + rim_color * rim + diff_color * diff + spec_color * spec;
     }
