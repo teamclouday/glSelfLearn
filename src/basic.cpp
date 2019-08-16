@@ -8,7 +8,7 @@ extern Model *myModel;
 extern Camera *myCamera;
 
 extern bool lineMode;
-extern SHADER_DATA myData;
+extern int maxDepth;
 
 void initAll()
 {
@@ -32,7 +32,7 @@ void initAll()
                                 SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE);
     myContext = SDL_GL_CreateContext(myWindow);
     // set vsync
-    SDL_GL_SetSwapInterval(1);
+    // SDL_GL_SetSwapInterval(1);
     if(glewInit() != GLEW_OK)
     {
         printf("Failed to init GLEW\n");
@@ -122,24 +122,6 @@ bool pollEvents()
                 case SDLK_SPACE:
                     lineMode = !lineMode;
                     break;
-                case SDLK_i:
-                    myData.offset[1] -= myData.zoom * 0.02f;
-                    break;
-                case SDLK_k:
-                    myData.offset[1] += myData.zoom * 0.02f;
-                    break;
-                case SDLK_j:
-                    myData.offset[0] -= myData.zoom * 0.02f;
-                    break;
-                case SDLK_l:
-                    myData.offset[0] += myData.zoom * 0.02f;
-                    break;
-                case SDLK_9:
-                    myData.zoom *= 1.02f;
-                    break;
-                case SDLK_0:
-                    myData.zoom /= 1.02f;
-                    break;
             }
         }
         else if(e.type == SDL_KEYUP)
@@ -163,6 +145,14 @@ bool pollEvents()
                     break;
                 case SDLK_DOWN:
                     myCamera->keyMap[5] = false;
+                    break;
+                case SDLK_9:
+                    maxDepth--;
+                    maxDepth = (maxDepth >= 1) ? maxDepth : 1;
+                    break;
+                case SDLK_0:
+                    maxDepth++;
+                    maxDepth = (maxDepth <= MAX_RECURSION_DEPTH) ? maxDepth : MAX_RECURSION_DEPTH;
                     break;
             }
         }
