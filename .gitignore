@@ -3,6 +3,7 @@ run*
 .vscode/
 build/
 external/*
+Debug/*
 !external/external.zip
 fonts/*
 models/*
