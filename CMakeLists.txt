@@ -35,6 +35,12 @@ IF(NOT EXISTS "${CMAKE_SOURCE_DIR}/bin/Release")
 FILE(MAKE_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/Release")
 ENDIF()
 
+IF(NOT EXISTS ${CMAKE_SOURCE_DIR}/external/external.zip)
+EXECUTE_PROCESS(
+    COMMAND git pull origin master
+)
+ENDIF()
+
 IF(NOT EXISTS "${CMAKE_SOURCE_DIR}/external/glew")
 EXECUTE_PROCESS(
     COMMAND tar -xf ${CMAKE_SOURCE_DIR}/external/external.zip -C ${CMAKE_SOURCE_DIR}/external
