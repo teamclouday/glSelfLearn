@@ -17,13 +17,25 @@ FILE(GLOB_RECURSE SRC_FILES "${CMAKE_SOURCE_DIR}/src/*.cpp")
 IF(WIN32)
 IF(NOT EXISTS "${CMAKE_SOURCE_DIR}/external/glew")
 EXECUTE_PROCESS(
-    COMMAND unzip ${CMAKE_SOURCE_DIR}/external/external.zip -d ${CMAKE_SOURCE_DIR}/external
+    COMMAND tar -xf ${CMAKE_SOURCE_DIR}/external/external.zip -C ${CMAKE_SOURCE_DIR}/external
 )
 ENDIF()
 
 IF(NOT EXISTS "${CMAKE_SOURCE_DIR}/SDL2.dll")
 EXECUTE_PROCESS(
-    COMMAND cp ${CMAKE_SOURCE_DIR}/external/SDL2/bin/SDL2.dll ${CMAKE_SOURCE_DIR}/SDL2.dll
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/external/SDL2/bin/SDL2.dll ${CMAKE_SOURCE_DIR}
+)
+ENDIF()
+
+IF(NOT EXISTS "${CMAKE_SOURCE_DIR}/assimp.dll")
+EXECUTE_PROCESS(
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/external/Assimp/bin/assimp.dll ${CMAKE_SOURCE_DIR}
+)
+ENDIF()
+
+IF(NOT EXISTS "${CMAKE_SOURCE_DIR}/freetype.dll")
+EXECUTE_PROCESS(
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/external/Freetype/bin/freetype.dll ${CMAKE_SOURCE_DIR}
 )
 ENDIF()
 
@@ -33,12 +45,16 @@ INCLUDE_DIRECTORIES(
     "${CMAKE_SOURCE_DIR}/external/SDL2/include"
     "${CMAKE_SOURCE_DIR}/external/glm/include"
     "${CMAKE_SOURCE_DIR}/external/SOIL/include"
+    "${CMAKE_SOURCE_DIR}/external/Assimp/include"
+    "${CMAKE_SOURCE_DIR}/external/Freetype/include"
 )
 
 LINK_DIRECTORIES(
     "${CMAKE_SOURCE_DIR}/external/glew/lib"
     "${CMAKE_SOURCE_DIR}/external/SDL2/lib"
     "${CMAKE_SOURCE_DIR}/external/SOIL/lib"
+    "${CMAKE_SOURCE_DIR}/external/Assimp/lib"
+    "${CMAKE_SOURCE_DIR}/external/Freetype/lib"
 )
 ENDIF(WIN32)
 
@@ -87,11 +103,12 @@ ADD_EXECUTABLE(run ${SRC_FILES})
 
 IF(WIN32)
 TARGET_LINK_LIBRARIES(run
-    mingw32
     SDL2main
     SDL2
     glew32s
     SOIL
+    assimp
+    freetype
     ${OPENGL_LIBRARIES}
 )
 ENDIF(WIN32)
