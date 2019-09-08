@@ -26,7 +26,11 @@
 
 #define SPF (1000 / 60)
 
-#define MAX_RECURSION_DEPTH 11
+#define MAX_RECURSION_DEPTH 6
+
+#ifndef MY_ROOT_DIR
+#define MY_ROOT_DIR "."
+#endif
 
 void initAll();
 float timer(Uint32 *now, Uint32 *prev);

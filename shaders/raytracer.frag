@@ -44,7 +44,7 @@ layout (binding = 3, std140) uniform LIGHTS
     light L[128];
 } lights;
 
-uniform int num_spheres = 10;
+uniform int num_spheres = 8;
 uniform int num_planes = 6;
 uniform int num_lights = 5;
 
@@ -291,8 +291,8 @@ void main()
         vec3 v = normalize(hit_position - R.origin);
         origin = hit_position;
         reflected = reflect(v, hit_normal);
-        reflected_color = S[sphere_index].color.rgb * 0.4;
-        refracted = refract(v, hit_normal, 3.14);
-        refracted_color = input_color * S[sphere_index].color.rgb * 0.4;
+        reflected_color = S[sphere_index].color.rgb * 0.5;
+        refracted = refract(v, hit_normal, 1.0);
+        refracted_color = input_color * S[sphere_index].color.rgb * 0.5;
     }
 }

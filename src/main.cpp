@@ -109,15 +109,15 @@ void renderAll(float deltaT, float fps)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // myCamera->update(deltaT, false);
-    float tt = (float)SDL_GetTicks() * 0.0001f;
+    float tt = (float)SDL_GetTicks() * 0.0002f;
     
     // glm::mat4 view_mat = myCamera->GetViewMatrix();
-    glm::vec3 view_pos = glm::vec3(sinf(tt * 10 * 0.3234f) * 28.0f,
-                                   cosf(tt * 10 * 0.4234f) * 28.0f,
-                                   cosf(tt * 10 * 0.1234f) * 28.0f);
-    glm::vec3 lookat_pos = glm::vec3(sinf(tt * 10 * 0.214f) * 8.0f,
-                                     cosf(tt * 10 * 0.153f) * 8.0f,
-                                     sinf(tt * 10 * 0.734f) * 8.0f);
+    glm::vec3 view_pos = glm::vec3(sinf(tt * 5 * 0.3234f) * 28.0f,
+                                   cosf(tt * 5 * 0.4234f) * 28.0f,
+                                   cosf(tt * 5 * 0.1234f) * 28.0f);
+    glm::vec3 lookat_pos = glm::vec3(sinf(tt * 5 * 0.214f) * 8.0f,
+                                     cosf(tt * 5 * 0.153f) * 8.0f,
+                                     sinf(tt * 5 * 0.734f) * 8.0f);
     glm::mat4 view_mat = glm::lookAt(view_pos, lookat_pos, glm::vec3(0.0f, 1.0f, 0.0f));
     // glm::mat4 proj_mat = glm::perspective(glm::radians(60.0f), (float)w/(float)h, 0.1f, 1000.0f);
     // glm::mat4 model_mat = glm::scale(glm::mat4(1.0f), glm::vec3(8.0f));
@@ -137,7 +137,7 @@ void renderAll(float deltaT, float fps)
         s[i].center = glm::vec3(sinf(fi * 123.0f + tt) * 15.75f,
                                 cosf(fi * 456.0f + tt) * 15.75f,
                                 (sinf(fi * 300.0f + tt) * cosf(fi * 200.0f + tt)) * 20.0f);
-        s[i].radius = fi * 2.3f + 3.5f;
+        s[i].radius = fi * 1.2f + 3.5f;
         float r = fi * 61.0f;
         float g = r + 0.14f;
         float b = g + 0.28f;
@@ -220,23 +220,23 @@ int main(int argc, char *argv[])
 {
     initAll();
 
-    myText = new glText("./fonts/roboto/Roboto-Regular.ttf", 48);
-    myModel = new Model("./models/crysis_nano_suit_2");
+    myText = new glText(std::string(MY_ROOT_DIR) + "/fonts/roboto/Roboto-Regular.ttf", 48);
+    myModel = new Model(std::string(MY_ROOT_DIR) + "/models/crysis_nano_suit_2");
     myCamera = new Camera(glm::vec3(0.0f, 0.0f, 0.0f));
 
     myShader = new Shader();
-    myShader->add("./shaders/raytracer.vert", GL_VERTEX_SHADER);
-    myShader->add("./shaders/raytracer.frag", GL_FRAGMENT_SHADER);
+    myShader->add(std::string(MY_ROOT_DIR) + "/shaders/raytracer.vert", GL_VERTEX_SHADER);
+    myShader->add(std::string(MY_ROOT_DIR) + "/shaders/raytracer.frag", GL_FRAGMENT_SHADER);
     myShader->compile(false);
 
     prepareShader = new Shader();
-    prepareShader->add("./shaders/prepare.vert", GL_VERTEX_SHADER);
-    prepareShader->add("./shaders/prepare.frag", GL_FRAGMENT_SHADER);
+    prepareShader->add(std::string(MY_ROOT_DIR) + "/shaders/prepare.vert", GL_VERTEX_SHADER);
+    prepareShader->add(std::string(MY_ROOT_DIR) + "/shaders/prepare.frag", GL_FRAGMENT_SHADER);
     prepareShader->compile(false);
 
     renderShader = new Shader();
-    renderShader->add("./shaders/render.vert", GL_VERTEX_SHADER);
-    renderShader->add("./shaders/render.frag", GL_FRAGMENT_SHADER);
+    renderShader->add(std::string(MY_ROOT_DIR) + "/shaders/render.vert", GL_VERTEX_SHADER);
+    renderShader->add(std::string(MY_ROOT_DIR) + "/shaders/render.frag", GL_FRAGMENT_SHADER);
     renderShader->compile(false);
 
     glGenBuffers(1, &uniformBuffer);
