@@ -85,8 +85,14 @@ bool pollEvents()
                 case SDLK_F11:
                 {
                     bool isFullScreen = SDL_GetWindowFlags(myWindow) & SDL_WINDOW_FULLSCREEN_DESKTOP;
+#ifdef __unix__
                     SDL_SetWindowPosition(myWindow, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+#endif
                     SDL_SetWindowFullscreen(myWindow, isFullScreen ? 0 : SDL_WINDOW_FULLSCREEN_DESKTOP);
+#ifdef _WIN32
+                    if(isFullScreen)
+                        SDL_SetWindowPosition(myWindow, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+#endif
                     break;
                 }
                 case SDLK_r:
